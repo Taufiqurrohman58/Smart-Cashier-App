@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_cashier/models/product.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -79,7 +80,9 @@ class _HomeScreenState extends State<HomeScreen> {
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.red),
               title: const Text("Keluar", style: TextStyle(fontWeight: FontWeight.bold)),
-              onTap: () {
+              onTap: () async {
+                final prefs = await SharedPreferences.getInstance();
+                await prefs.remove('auth_token');
                 Navigator.pop(ctx);
                 Navigator.pushReplacementNamed(context, '/login');
               },

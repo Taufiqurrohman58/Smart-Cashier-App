@@ -1,4 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'dart:convert';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -13,6 +16,7 @@ class _LoginScreenState extends State<LoginScreen> {
   final _passwordController = TextEditingController();
 
   bool _isPasswordHidden = true;
+  bool _isLoading = false;
 
   @override
   void dispose() {
@@ -21,9 +25,36 @@ class _LoginScreenState extends State<LoginScreen> {
     super.dispose();
   }
 
-  void _login() {
+  Future<void> _login() async {
     if (_formKey.currentState!.validate()) {
-      Navigator.pushReplacementNamed(context, '/home');
+      setState(() => _isLoading = true);
+      try {
+        final response = await http.post(
+          Uri.parse('http://127.0.0.1:8000/api/auth/login/'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'email': _emailController.text,
+            'password': _passwordController.text,
+          }),
+        );
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+          final token = data['token']; // Assuming the response has a 'token' field
+          final prefs = await SharedPreferences.getInstance();
+          await prefs.setString('auth_token', token);
+          Navigator.pushReplacementNamed(context, '/home');
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: ${response.body}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error: $e')),
+        );
+      } finally {
+        setState(() => _isLoading = false);
+      }
     }
   }
 
@@ -106,7 +137,7 @@ class _LoginScreenState extends State<LoginScreen> {
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton(
-                            onPressed: _login,
+                            onPressed: _isLoading ? null : _login,
                             style: ElevatedButton.styleFrom(
                               backgroundColor: Colors.redAccent,
                               padding: const EdgeInsets.symmetric(vertical: 14),
@@ -114,10 +145,12 @@ class _LoginScreenState extends State<LoginScreen> {
                                 borderRadius: BorderRadius.circular(14),
                               ),
                             ),
-                            child: const Text(
-                              "Masuk",
-                              style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
-                            ),
+                            child: _isLoading
+                                ? const CircularProgressIndicator(color: Colors.white)
+                                : const Text(
+                                    "Masuk",
+                                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+                                  ),
                           ),
                         ),
 
