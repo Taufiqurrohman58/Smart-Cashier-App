@@ -4,6 +4,8 @@ import 'screens/login_screen.dart';
 import 'screens/register_screen.dart';
 import 'screens/home_screen.dart';
 import 'screens/checkout_screen.dart';
+import 'screens/product_detail_screen.dart';
+import 'models/product.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -28,7 +30,10 @@ class MainApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => HomeScreen(),
-        '/checkout':(context)=> CheckoutScreen()
+        '/checkout': (context) => CheckoutScreen(),
+        '/product_detail': (context) => ProductDetailScreen(
+          product: ModalRoute.of(context)!.settings.arguments as Product,
+        ),
       },
     );
   }
