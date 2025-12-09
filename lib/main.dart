@@ -1,39 +1,39 @@
 import 'package:flutter/material.dart';
-import 'package:shared_preferences/shared_preferences.dart';
-import 'screens/login_screen.dart';
-import 'screens/register_screen.dart';
+// import 'screens/checkout_screen.dart';
 import 'screens/home_screen.dart';
-import 'screens/checkout_screen.dart';
-import 'screens/product_detail_screen.dart';
-import 'models/product.dart';
+import 'screens/LoginScreen.dart';
+import 'screens/RegisterScreen.dart';
+import 'screens/payment_screen.dart';
+import 'screens/order_detail_screen.dart';
 
-void main() async {
-  WidgetsFlutterBinding.ensureInitialized();
-  final prefs = await SharedPreferences.getInstance();
-  final token = prefs.getString('auth_token');
-  runApp(MainApp(initialRoute: token != null ? '/home' : '/login'));
+// ✅ TAMBAHKAN INI
+final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+
+void main() {
+  runApp(const MainApp());
 }
 
 class MainApp extends StatelessWidget {
-  final String initialRoute;
-  const MainApp({super.key, required this.initialRoute});
+  const MainApp({super.key});
 
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      // ✅ PASANG DI SINI
+      navigatorKey: navigatorKey,
+
       theme: ThemeData(
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
       ),
-      initialRoute: initialRoute,
+      initialRoute: '/login',
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => HomeScreen(),
-        '/checkout': (context) => CheckoutScreen(),
-        '/product_detail': (context) => ProductDetailScreen(
-          product: ModalRoute.of(context)!.settings.arguments as Product,
-        ),
+        '/order':(context) => OrderDetailScreen(),
+        '/payment':(context)=> PaymentScreen()
+        // '/checkout': (context) => CheckoutScreen(),
       },
     );
   }
