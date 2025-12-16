@@ -3,17 +3,19 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/product.dart';
+import '../widgets/kasir_drawer.dart';
+import '../widgets/category_menu.dart';
 import 'history_screen.dart';
 import 'report_screen.dart';
 
-class HomeScreen extends StatefulWidget {
-  const HomeScreen({super.key});
+class KasirScreen extends StatefulWidget {
+  const KasirScreen({super.key});
 
   @override
-  State<HomeScreen> createState() => _HomeScreenState();
+  State<KasirScreen> createState() => _KasirScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _KasirScreenState extends State<KasirScreen> {
   int totalItem = 0;
   int subtotal = 0;
 
@@ -35,7 +37,7 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
-    print('HomeScreen: initState called');
+    print('KasirScreen: initState called');
     _fetchProducts();
     _loadUserData();
   }
@@ -55,12 +57,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _fetchProducts() async {
-    print('HomeScreen: _fetchProducts called');
+    print('KasirScreen: _fetchProducts called');
     try {
       final prefs = await SharedPreferences.getInstance();
       final token = prefs.getString('auth_token');
       print(
-        'HomeScreen: Token retrieved: ${token != null ? 'present' : 'null'}',
+        'KasirScreen: Token retrieved: ${token != null ? 'present' : 'null'}',
       );
 
       if (token == null) {
@@ -68,7 +70,7 @@ class _HomeScreenState extends State<HomeScreen> {
           errorMessage = 'Token tidak ditemukan';
           isLoading = false;
         });
-        print('HomeScreen: No token found, setting error');
+        print('KasirScreen: No token found, setting error');
         return;
       }
 
@@ -76,12 +78,12 @@ class _HomeScreenState extends State<HomeScreen> {
         Uri.parse('http://127.0.0.1:8000/api/kantin/produk/'),
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': 'Token $token', // 🔥 WAJIB ganti ke “Token”
+          'Authorization': 'Token $token', // 🔥 WAJIB ganti ke "Token"
         },
       );
 
-      print('HomeScreen: API response status: ${response.statusCode}');
-      print('HomeScreen: API body: ${response.body}');
+      print('KasirScreen: API response status: ${response.statusCode}');
+      print('KasirScreen: API body: ${response.body}');
 
       if (response.statusCode == 200) {
         final List<dynamic> data = json.decode(response.body);
@@ -90,7 +92,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isLoading = false;
         });
         print(
-          'HomeScreen: Products loaded successfully, count: ${products.length}',
+          'KasirScreen: Products loaded successfully, count: ${products.length}',
         );
       } else {
         setState(() {
@@ -98,7 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
           isLoading = false;
         });
         print(
-          'HomeScreen: Failed to load products, status: ${response.statusCode}',
+          'KasirScreen: Failed to load products, status: ${response.statusCode}',
         );
       }
     } catch (e) {
@@ -106,7 +108,7 @@ class _HomeScreenState extends State<HomeScreen> {
         errorMessage = 'Error: $e';
         isLoading = false;
       });
-      print('HomeScreen: Error fetching products: $e');
+      print('KasirScreen: Error fetching products: $e');
     }
   }
 
@@ -116,7 +118,23 @@ class _HomeScreenState extends State<HomeScreen> {
       backgroundColor: const Color(0xFFF3F3F3),
 
       // ================= DRAWER =================
-      drawer: _buildDrawer(),
+      drawer: KasirDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          }
+        },
+      ),
 
       appBar: isSearchMode
           ? AppBar(
@@ -163,7 +181,7 @@ class _HomeScreenState extends State<HomeScreen> {
                       },
                     ),
                     const Text(
-                      "Beranda",
+                      "Kasir",
                       style: TextStyle(
                         color: Colors.white,
                         fontSize: 18,
@@ -201,7 +219,14 @@ class _HomeScreenState extends State<HomeScreen> {
       body: SafeArea(
         child: Column(
           children: [
-            _categoryMenu(),
+            CategoryMenu(
+              selectedIndex: selectedCategoryIndex,
+              onIndexChanged: (index) {
+                setState(() {
+                  selectedCategoryIndex = index;
+                });
+              },
+            ),
             Expanded(
               child: isLoading
                   ? const Center(child: CircularProgressIndicator())
@@ -230,146 +255,6 @@ class _HomeScreenState extends State<HomeScreen> {
     );
   }
 
-  // ================= DRAWER UI =================
-  Widget _buildDrawer() {
-    return Drawer(
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            color: Colors.teal,
-            child: Row(
-              children: [
-                const SizedBox(width: 12),
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.person, size: 39),
-                ),
-                const SizedBox(width: 6),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      userRole,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          _drawerItem(icon: Icons.home, title: "Beranda", index: 0),
-          _drawerItem(icon: Icons.history, title: "History", index: 1),
-          _drawerItem(icon: Icons.bar_chart, title: "Laporan", index: 2),
-        ],
-      ),
-    );
-  }
-
-  Widget _drawerItem({
-    required IconData icon,
-    required String title,
-    required int index,
-  }) {
-    bool active = selectedDrawerIndex == index;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedDrawerIndex = index;
-        });
-        Navigator.pop(context);
-        if (index == 1) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const HistoryScreen()),
-          );
-        } else if (index == 2) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const ReportScreen()),
-          );
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: active ? Colors.teal.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: active ? Border.all(color: Colors.teal, width: 2) : null,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: active ? Colors.teal : Colors.grey),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: TextStyle(
-                color: active ? Colors.teal : Colors.black,
-                fontWeight: active ? FontWeight.bold : FontWeight.normal,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  // ================= CATEGORY =================
-  Widget _categoryMenu() {
-    return SizedBox(
-      height: 50,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 12),
-        itemCount: categories.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              setState(() {
-                selectedCategoryIndex = index;
-              });
-            },
-            child: _chip(categories[index], selectedCategoryIndex == index),
-          );
-        },
-      ),
-    );
-  }
-
-  Widget _chip(String text, bool active) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 6),
-      child: Chip(
-        backgroundColor: active
-            ? const Color(0xFF1D1D1F)
-            : Colors.grey.shade200,
-        label: Text(
-          text,
-          style: TextStyle(color: active ? Colors.white : Colors.black),
-        ),
-      ),
-    );
-  }
-
   // ================= MENU ITEM =================
   Widget _menuItem(Product product) {
     return GestureDetector(
@@ -387,12 +272,14 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(10),
-              child: Image.network(
-                product.image,
-                width: 60,
-                height: 60,
-                fit: BoxFit.cover,
-              ),
+              child: product.image.isNotEmpty
+                  ? Image.network(
+                      product.image,
+                      width: 60,
+                      height: 60,
+                      fit: BoxFit.cover,
+                    )
+                  : _noImage(),
             ),
             const SizedBox(width: 12),
             Expanded(
@@ -538,6 +425,18 @@ class _HomeScreenState extends State<HomeScreen> {
           color: Colors.black,
         ),
         child: Icon(icon, color: Colors.white),
+      ),
+    );
+  }
+
+  Widget _noImage() {
+    return Container(
+      width: 60,
+      height: 60,
+      color: Colors.grey.shade300,
+      child: const Icon(
+        Icons.image_not_supported,
+        color: Colors.grey,
       ),
     );
   }

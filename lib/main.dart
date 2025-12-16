@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 // import 'screens/checkout_screen.dart';
 import 'screens/home_screen.dart';
+import 'screens/kasir_screen.dart';
+import 'screens/admin_screen.dart';
 import 'screens/LoginScreen.dart';
 import 'screens/RegisterScreen.dart';
 import 'screens/payment_screen.dart';
@@ -31,8 +33,10 @@ class MainApp extends StatelessWidget {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
         '/home': (context) => HomeScreen(),
-        '/order':(context) => OrderDetailScreen(),
-        '/payment':(context)=> PaymentScreen()
+        '/kasir': (context) => const KasirScreen(),
+        '/admin': (context) => const AdminScreen(),
+        '/order': (context) => OrderDetailScreen(),
+        '/payment': (context) => PaymentScreen(),
         // '/checkout': (context) => CheckoutScreen(),
       },
     );

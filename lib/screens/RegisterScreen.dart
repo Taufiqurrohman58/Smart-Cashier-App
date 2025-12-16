@@ -12,11 +12,9 @@ class RegisterScreen extends StatefulWidget {
 class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
   final _confirmPasswordController = TextEditingController();
-
-  String? _selectedRole;
 
   bool _isPasswordHidden = true;
   bool _isConfirmPasswordHidden = true;
@@ -27,20 +25,25 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = true);
       try {
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:8000/api/auth/register/'),
+          Uri.parse('http://127.0.0.1:8000/api/auth/create-admin/'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'name': _nameController.text,
-            'email': _emailController.text,
+            'username': _usernameController.text,
             'password': _passwordController.text,
-            'role': _selectedRole,
           }),
         );
-        if (response.statusCode == 200 || response.statusCode == 201) {
+
+        final data = jsonDecode(response.body);
+
+        if (response.statusCode == 201 && data['status'] == true) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text(data['message'])),
+          );
           Navigator.pushReplacementNamed(context, '/login');
         } else {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text('Registration failed: ${response.body}')),
+            SnackBar(content: Text('Registration failed: ${data['message'] ?? response.body}')),
           );
         }
       } catch (e) {
@@ -91,9 +94,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                       borderRadius: BorderRadius.circular(20),
                     ),
                     child: Padding(
-                      padding: const EdgeInsets.all(
-                        12,
-                      ), // ⬅️ jarak dari semua sisi
+                      padding: const EdgeInsets.all(12),
                       child: Image.asset(
                         "assets/images/cashier.png",
                         fit: BoxFit.contain,
@@ -134,12 +135,12 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
                         const SizedBox(height: 16),
 
-                        // EMAIL
+                        // USERNAME
                         TextFormField(
-                          controller: _emailController,
+                          controller: _usernameController,
                           decoration: InputDecoration(
-                            hintText: 'Enter your gmail',
-                            prefixIcon: const Icon(Icons.email_outlined),
+                            hintText: 'Username',
+                            prefixIcon: const Icon(Icons.account_circle_outlined),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
@@ -148,7 +149,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             ),
                           ),
                           validator: (value) =>
-                              value!.isEmpty ? "Email wajib diisi" : null,
+                              value!.isEmpty ? "Username wajib diisi" : null,
                         ),
 
                         const SizedBox(height: 16),
@@ -221,38 +222,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
                             }
                             return null;
                           },
-                        ),
-
-                        const SizedBox(height: 16),
-
-                        // ROLE
-                        DropdownButtonFormField<String>(
-                          value: _selectedRole,
-                          decoration: InputDecoration(
-                            hintText: 'Pilih Role',
-                            prefixIcon: const Icon(Icons.admin_panel_settings),
-                            filled: true,
-                            fillColor: Colors.white,
-                            border: OutlineInputBorder(
-                              borderRadius: BorderRadius.circular(14),
-                              borderSide: BorderSide.none,
-                            ),
-                          ),
-                          items: ['admin', 'kasir']
-                              .map(
-                                (role) => DropdownMenuItem(
-                                  value: role,
-                                  child: Text(role),
-                                ),
-                              )
-                              .toList(),
-                          onChanged: (value) {
-                            setState(() {
-                              _selectedRole = value;
-                            });
-                          },
-                          validator: (value) =>
-                              value == null ? "Role harus dipilih" : null,
                         ),
 
                         const SizedBox(height: 24),

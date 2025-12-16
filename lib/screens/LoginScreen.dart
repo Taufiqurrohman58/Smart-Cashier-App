@@ -12,7 +12,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen> {
   final _formKey = GlobalKey<FormState>();
-  final _emailController = TextEditingController();
+  final _usernameController = TextEditingController();
   final _passwordController = TextEditingController();
 
   bool _rememberMe = false;
@@ -20,51 +20,56 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isLoading = false;
 
   Future<void> _login() async {
-  if (_formKey.currentState!.validate()) {
-    setState(() => _isLoading = true);
+    if (_formKey.currentState!.validate()) {
+      setState(() => _isLoading = true);
 
-    try {
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/auth/login/'),
-        headers: {'Content-Type': 'application/json'},
-        body: jsonEncode({
-          'email': _emailController.text,
-          'password': _passwordController.text,
-        }),
-      );
-
-      print("Status: ${response.statusCode}");
-      print("Body: ${response.body}");
-
-      if (response.statusCode == 200) {
-        final data = jsonDecode(response.body);
-
-        final token = data['token'] ?? "";
-        final role = data['user']?['role'] ?? "";
-
-        if (token.isEmpty) {
-          throw "Token tidak ada dalam respons backend";
-        }
-
-        final prefs = await SharedPreferences.getInstance();
-        await prefs.setString('auth_token', token);
-        await prefs.setString('user_role', role);
-
-        Navigator.pushReplacementNamed(context, '/home');
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Login failed: ${response.body}')),
+      try {
+        final response = await http.post(
+          Uri.parse('http://127.0.0.1:8000/api/auth/login/'),
+          headers: {'Content-Type': 'application/json'},
+          body: jsonEncode({
+            'username': _usernameController.text,
+            'password': _passwordController.text,
+          }),
         );
+
+        if (response.statusCode == 200) {
+          final data = jsonDecode(response.body);
+
+          if (data['status'] == true) {
+            final token = data['token'];
+            final role = data['user']['role'];
+            final name = data['user']['name'];
+
+            final prefs = await SharedPreferences.getInstance();
+            await prefs.setString('auth_token', token);
+            await prefs.setString('user_role', role);
+            await prefs.setString('user_name', name);
+
+            if (role == 'kasir') {
+              Navigator.pushReplacementNamed(context, '/kasir');
+            } else {
+              Navigator.pushReplacementNamed(context, '/admin');
+            }
+          } else {
+            ScaffoldMessenger.of(
+              context,
+            ).showSnackBar(const SnackBar(content: Text('Login gagal')));
+          }
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Login failed: ${response.body}')),
+          );
+        }
+      } catch (e) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text('Error: $e')));
+      } finally {
+        setState(() => _isLoading = false);
       }
-    } catch (e) {
-      ScaffoldMessenger.of(context)
-          .showSnackBar(SnackBar(content: Text('Error: $e')));
-    } finally {
-      setState(() => _isLoading = false);
     }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
@@ -118,18 +123,16 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
 
                   const SizedBox(height: 32),
-
-                  // ============== FORM ==============
                   Form(
                     key: _formKey,
                     child: Column(
                       children: [
                         // EMAIL
                         TextFormField(
-                          controller: _emailController,
+                          controller: _usernameController,
                           decoration: InputDecoration(
-                            hintText: 'Enter your gmail',
-                            prefixIcon: const Icon(Icons.email_outlined),
+                            hintText: 'Username',
+                            prefixIcon: const Icon(Icons.person_outline),
                             filled: true,
                             fillColor: Colors.white,
                             border: OutlineInputBorder(
@@ -138,7 +141,7 @@ class _LoginScreenState extends State<LoginScreen> {
                             ),
                           ),
                           validator: (value) =>
-                              value!.isEmpty ? "Email wajib diisi" : null,
+                              value!.isEmpty ? "Username wajib diisi" : null,
                         ),
 
                         const SizedBox(height: 16),
