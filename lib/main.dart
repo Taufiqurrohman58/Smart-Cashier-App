@@ -7,6 +7,11 @@ import 'screens/LoginScreen.dart';
 import 'screens/RegisterScreen.dart';
 import 'screens/payment_screen.dart';
 import 'screens/order_detail_screen.dart';
+import 'screens/pengeluaran_screen.dart';
+import 'screens/laporan_screen.dart';
+import 'screens/ai_insight_screen.dart';
+import 'screens/stok_management_screen.dart';
+import 'screens/master_data_screen.dart';
 
 // ✅ TAMBAHKAN INI
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -37,6 +42,11 @@ class MainApp extends StatelessWidget {
         '/admin': (context) => const AdminScreen(),
         '/order': (context) => OrderDetailScreen(),
         '/payment': (context) => PaymentScreen(),
+        '/pengeluaran': (context) => const PengeluaranScreen(),
+        '/laporan': (context) => const LaporanScreen(),
+        '/ai-insight': (context) => const AiInsightScreen(),
+        '/stok-management': (context) => const StokManagementScreen(),
+        '/master-data': (context) => const MasterDataScreen(),
         // '/checkout': (context) => CheckoutScreen(),
       },
     );

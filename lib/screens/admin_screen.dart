@@ -6,7 +6,10 @@ import '../models/product.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/category_menu.dart';
 import 'history_screen.dart';
-import 'report_screen.dart';
+import 'laporan_screen.dart';
+import 'ai_insight_screen.dart';
+import 'stok_management_screen.dart';
+import 'master_data_screen.dart';
 
 class AdminScreen extends StatefulWidget {
   const AdminScreen({super.key});
@@ -135,7 +138,26 @@ class _AdminScreenState extends State<AdminScreen> {
           } else if (index == 2) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const ReportScreen()),
+              MaterialPageRoute(builder: (context) => const LaporanScreen()),
+            );
+          } else if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+            );
+          } else if (index == 4) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StokManagementScreen(),
+              ),
+            );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const MasterDataScreen(),
+              ),
             );
           }
         },

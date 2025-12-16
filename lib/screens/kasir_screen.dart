@@ -7,6 +7,7 @@ import '../widgets/kasir_drawer.dart';
 import '../widgets/category_menu.dart';
 import 'history_screen.dart';
 import 'report_screen.dart';
+import 'pengeluaran_screen.dart';
 
 class KasirScreen extends StatefulWidget {
   const KasirScreen({super.key});
@@ -131,6 +132,11 @@ class _KasirScreenState extends State<KasirScreen> {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const PengeluaranScreen()),
             );
           }
         },
