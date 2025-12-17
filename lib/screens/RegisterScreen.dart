@@ -25,7 +25,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       setState(() => _isLoading = true);
       try {
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:8000/api/auth/create-admin/'),
+          Uri.parse('https://flutter001.pythonanywhere.com/api/auth/create-admin/'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'name': _nameController.text,

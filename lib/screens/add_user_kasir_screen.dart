@@ -11,10 +11,11 @@ class AddUserKasirScreen extends StatefulWidget {
 }
 
 class _AddUserKasirScreenState extends State<AddUserKasirScreen> {
+  final TextEditingController _nameController = TextEditingController();
   final TextEditingController _usernameController = TextEditingController();
-  final TextEditingController _emailController = TextEditingController();
   final TextEditingController _passwordController = TextEditingController();
-  final TextEditingController _confirmPasswordController = TextEditingController();
+  final TextEditingController _confirmPasswordController =
+      TextEditingController();
 
   bool _isLoading = false;
   String _errorMessage = '';
@@ -22,16 +23,16 @@ class _AddUserKasirScreenState extends State<AddUserKasirScreen> {
 
   @override
   void dispose() {
+    _nameController.dispose();
     _usernameController.dispose();
-    _emailController.dispose();
     _passwordController.dispose();
     _confirmPasswordController.dispose();
     super.dispose();
   }
 
   Future<void> _addUser() async {
-    if (_usernameController.text.isEmpty ||
-        _emailController.text.isEmpty ||
+    if (_nameController.text.isEmpty ||
+        _usernameController.text.isEmpty ||
         _passwordController.text.isEmpty ||
         _confirmPasswordController.text.isEmpty) {
       setState(() {
@@ -73,30 +74,34 @@ class _AddUserKasirScreenState extends State<AddUserKasirScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/user/kasir/tambah/'),
+        Uri.parse(
+          'https://flutter001.pythonanywhere.com/api/auth/create-kasir/',
+        ),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token $token',
         },
         body: json.encode({
+          "name": _nameController.text,
           "username": _usernameController.text,
-          "email": _emailController.text,
           "password": _passwordController.text,
         }),
       );
 
+      final data = json.decode(response.body);
+
       if (response.statusCode == 201) {
-        final data = json.decode(response.body);
         setState(() {
-          _successMessage = data['message'] ?? 'User kasir berhasil ditambahkan';
+          _successMessage =
+              data['message'] ?? 'User kasir berhasil ditambahkan';
+          _nameController.clear();
           _usernameController.clear();
-          _emailController.clear();
           _passwordController.clear();
           _confirmPasswordController.clear();
         });
       } else {
         setState(() {
-          _errorMessage = 'Error: ${response.statusCode}';
+          _errorMessage = data['message'] ?? 'Error: ${response.statusCode}';
         });
       }
     } catch (e) {
@@ -135,18 +140,12 @@ class _AddUserKasirScreenState extends State<AddUserKasirScreen> {
           children: [
             const Text(
               "Tambah User Kasir Baru",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               "Tambahkan user kasir baru ke sistem",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 32),
 
@@ -159,10 +158,10 @@ class _AddUserKasirScreenState extends State<AddUserKasirScreen> {
               child: Column(
                 children: [
                   TextField(
-                    controller: _usernameController,
+                    controller: _nameController,
                     decoration: const InputDecoration(
-                      labelText: "Username",
-                      hintText: "Masukkan username",
+                      labelText: "Name",
+                      hintText: "Masukkan nama",
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.person),
                     ),
@@ -170,13 +169,12 @@ class _AddUserKasirScreenState extends State<AddUserKasirScreen> {
                   const SizedBox(height: 20),
 
                   TextField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
+                    controller: _usernameController,
                     decoration: const InputDecoration(
-                      labelText: "Email",
-                      hintText: "Masukkan email",
+                      labelText: "Username",
+                      hintText: "Masukkan username",
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.email),
+                      prefixIcon: Icon(Icons.person_outline),
                     ),
                   ),
                   const SizedBox(height: 20),

@@ -1,8 +1,7 @@
 import 'package:flutter/material.dart';
-import 'add_product_gudang_screen.dart';
 import 'add_user_kasir_screen.dart';
 import 'add_category_screen.dart';
-import 'add_kantin_screen.dart';
+import 'produk_gudang_screen.dart';
 
 class MasterDataScreen extends StatelessWidget {
   const MasterDataScreen({super.key});
@@ -10,7 +9,7 @@ class MasterDataScreen extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF3F3F3),
+      backgroundColor: Colors.white,
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
         leading: IconButton(
@@ -19,143 +18,121 @@ class MasterDataScreen extends StatelessWidget {
             Navigator.pop(context);
           },
         ),
-        title: const Text(
-          "Master Data",
-          style: TextStyle(color: Colors.white),
-        ),
+        title: const Text("Master Data", style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
-      body: Padding(
-        padding: const EdgeInsets.all(20),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              "Kelola Data Master",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 8),
-            const Text(
-              "Tambah dan kelola data master sistem",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
-            ),
-            const SizedBox(height: 32),
-            Expanded(
-              child: GridView.count(
+      body: SafeArea(
+        child: SingleChildScrollView(
+          padding: const EdgeInsets.all(20),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Menu Grid
+              GridView.count(
                 crossAxisCount: 2,
                 crossAxisSpacing: 16,
                 mainAxisSpacing: 16,
+                shrinkWrap: true,
+                physics: const NeverScrollableScrollPhysics(),
                 children: [
                   _buildMenuCard(
-                    context,
                     icon: Icons.inventory_2,
-                    title: "Tambah Produk Gudang",
+                    title: "Produk Gudang",
+                    subtitle: "Lihat produk gudang",
                     color: Colors.blue,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AddProductGudangScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const ProdukGudangScreen(),
+                        ),
                       );
                     },
                   ),
                   _buildMenuCard(
-                    context,
                     icon: Icons.person_add,
-                    title: "Tambah User Kasir",
+                    title: "User Kasir",
+                    subtitle: "Tambah user baru",
                     color: Colors.green,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AddUserKasirScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const AddUserKasirScreen(),
+                        ),
                       );
                     },
                   ),
                   _buildMenuCard(
-                    context,
                     icon: Icons.category,
-                    title: "Tambah Kategori",
+                    title: "Kategori",
+                    subtitle: "Tambah kategori baru",
                     color: Colors.orange,
                     onTap: () {
                       Navigator.push(
                         context,
-                        MaterialPageRoute(builder: (context) => const AddCategoryScreen()),
-                      );
-                    },
-                  ),
-                  _buildMenuCard(
-                    context,
-                    icon: Icons.store,
-                    title: "Tambah Kantin",
-                    color: Colors.purple,
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (context) => const AddKantinScreen()),
+                        MaterialPageRoute(
+                          builder: (context) => const AddCategoryScreen(),
+                        ),
                       );
                     },
                   ),
                 ],
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildMenuCard(
-    BuildContext context, {
+  Widget _buildMenuCard({
     required IconData icon,
     required String title,
+    required String subtitle,
     required Color color,
     required VoidCallback onTap,
   }) {
     return InkWell(
       onTap: onTap,
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(12),
       child: Container(
-        padding: const EdgeInsets.all(20),
+        padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
           color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(12),
           boxShadow: [
             BoxShadow(
-              color: Colors.grey.withOpacity(0.1),
-              spreadRadius: 1,
-              blurRadius: 5,
-              offset: const Offset(0, 2),
+              color: Colors.grey.withOpacity(0.05),
+              spreadRadius: 0,
+              blurRadius: 2,
+              offset: const Offset(0, 1),
             ),
           ],
         ),
         child: Column(
           mainAxisAlignment: MainAxisAlignment.center,
+          crossAxisAlignment: CrossAxisAlignment.center,
           children: [
             Container(
-              padding: const EdgeInsets.all(16),
+              padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
                 color: color.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                icon,
-                size: 32,
-                color: color,
-              ),
+              child: Icon(icon, size: 28, color: color),
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: 8),
             Text(
               title,
               textAlign: TextAlign.center,
-              style: const TextStyle(
-                fontSize: 14,
-                fontWeight: FontWeight.w600,
-              ),
+              style: const TextStyle(fontSize: 16, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 4),
+            Text(
+              subtitle,
+              textAlign: TextAlign.center,
+              style: TextStyle(fontSize: 12, color: Colors.grey[500]),
             ),
           ],
         ),

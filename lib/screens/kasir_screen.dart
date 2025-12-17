@@ -499,7 +499,6 @@ class _KasirScreenState extends State<KasirScreen> {
     );
   }
 
-  // ================= LOGOUT DIALOG =================
   void _showLogoutDialog() {
     showDialog(
       context: context,

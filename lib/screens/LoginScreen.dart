@@ -25,7 +25,7 @@ class _LoginScreenState extends State<LoginScreen> {
 
       try {
         final response = await http.post(
-          Uri.parse('http://127.0.0.1:8000/api/auth/login/'),
+          Uri.parse('https://flutter001.pythonanywhere.com/api/auth/login/'),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode({
             'username': _usernameController.text,

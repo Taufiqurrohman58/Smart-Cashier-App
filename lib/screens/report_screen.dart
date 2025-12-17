@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'package:smart_cashier/screens/kasir_screen.dart';
 import 'history_screen.dart';
 
 class ReportScreen extends StatefulWidget {
@@ -116,7 +116,7 @@ class _ReportScreenState extends State<ReportScreen> {
         if (index == 0) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const KasirScreen()),
           );
         } else if (index == 1) {
           Navigator.pushReplacement(

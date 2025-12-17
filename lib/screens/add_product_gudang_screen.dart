@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
 
 class AddProductGudangScreen extends StatefulWidget {
   const AddProductGudangScreen({super.key});
@@ -12,9 +14,13 @@ class AddProductGudangScreen extends StatefulWidget {
 
 class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _priceController = TextEditingController();
   final TextEditingController _categoryController = TextEditingController();
-  final TextEditingController _initialStockController = TextEditingController();
+  final TextEditingController _priceController = TextEditingController();
+  final TextEditingController _stockController = TextEditingController();
+  final TextEditingController _satuanController = TextEditingController();
+
+  File? _imageFile;
+  final ImagePicker _picker = ImagePicker();
 
   bool _isLoading = false;
   String _errorMessage = '';
@@ -23,36 +29,30 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _priceController.dispose();
     _categoryController.dispose();
-    _initialStockController.dispose();
+    _priceController.dispose();
+    _stockController.dispose();
+    _satuanController.dispose();
     super.dispose();
+  }
+
+  Future<void> _pickImage() async {
+    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    if (pickedFile != null) {
+      setState(() {
+        _imageFile = File(pickedFile.path);
+      });
+    }
   }
 
   Future<void> _addProduct() async {
     if (_nameController.text.isEmpty ||
-        _priceController.text.isEmpty ||
         _categoryController.text.isEmpty ||
-        _initialStockController.text.isEmpty) {
+        _priceController.text.isEmpty ||
+        _stockController.text.isEmpty ||
+        _satuanController.text.isEmpty) {
       setState(() {
         _errorMessage = 'Semua field harus diisi';
-      });
-      return;
-    }
-
-    final price = double.tryParse(_priceController.text);
-    final stock = int.tryParse(_initialStockController.text);
-
-    if (price == null || price <= 0) {
-      setState(() {
-        _errorMessage = 'Harga harus berupa angka positif';
-      });
-      return;
-    }
-
-    if (stock == null || stock < 0) {
-      setState(() {
-        _errorMessage = 'Stok awal harus berupa angka non-negatif';
       });
       return;
     }
@@ -75,32 +75,45 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
         return;
       }
 
-      final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/gudang/produk/tambah/'),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Token $token',
-        },
-        body: json.encode({
-          "name": _nameController.text,
-          "price": price,
-          "category": _categoryController.text,
-          "initial_stock": stock,
-        }),
+      final request = http.MultipartRequest(
+        'POST',
+        Uri.parse('https://flutter001.pythonanywhere.com/api/gudang/produk/'),
       );
 
+      request.headers['Authorization'] = 'Token $token';
+
+      request.fields['name'] = _nameController.text;
+      request.fields['category'] = _categoryController.text;
+      request.fields['price'] = _priceController.text;
+      request.fields['stock_gudang'] = _stockController.text;
+      request.fields['satuan'] = _satuanController.text;
+
+      if (_imageFile != null) {
+        request.files.add(
+          await http.MultipartFile.fromPath('image', _imageFile!.path),
+        );
+      }
+
+      final response = await request.send();
+      final responseBody = await response.stream.bytesToString();
+      final data = json.decode(responseBody);
+
       if (response.statusCode == 201) {
-        final data = json.decode(response.body);
         setState(() {
-          _successMessage = data['message'] ?? 'Produk berhasil ditambahkan';
+          _successMessage = 'Produk berhasil ditambahkan';
           _nameController.clear();
-          _priceController.clear();
           _categoryController.clear();
-          _initialStockController.clear();
+          _priceController.clear();
+          _stockController.clear();
+          _satuanController.clear();
+          _imageFile = null;
+        });
+        Future.delayed(const Duration(seconds: 2), () {
+          Navigator.pop(context, true); // Return true to indicate success
         });
       } else {
         setState(() {
-          _errorMessage = 'Error: ${response.statusCode}';
+          _errorMessage = data['message'] ?? 'Error: ${response.statusCode}';
         });
       }
     } catch (e) {
@@ -138,19 +151,13 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             const Text(
-              "Tambah Produk Baru",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              "Tambah Produk Gudang",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               "Tambahkan produk baru ke gudang",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 32),
 
@@ -168,19 +175,7 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
                       labelText: "Nama Produk",
                       hintText: "Masukkan nama produk",
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.inventory_2),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  TextField(
-                    controller: _priceController,
-                    keyboardType: TextInputType.number,
-                    decoration: const InputDecoration(
-                      labelText: "Harga (Rp)",
-                      hintText: "Masukkan harga produk",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.attach_money),
+                      prefixIcon: Icon(Icons.inventory),
                     ),
                   ),
                   const SizedBox(height: 20),
@@ -189,7 +184,7 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
                     controller: _categoryController,
                     decoration: const InputDecoration(
                       labelText: "Kategori",
-                      hintText: "Masukkan kategori produk",
+                      hintText: "Masukkan kategori (e.g., Minuman)",
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.category),
                     ),
@@ -197,13 +192,67 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
                   const SizedBox(height: 20),
 
                   TextField(
-                    controller: _initialStockController,
+                    controller: _priceController,
                     keyboardType: TextInputType.number,
                     decoration: const InputDecoration(
-                      labelText: "Stok Awal",
-                      hintText: "Masukkan jumlah stok awal",
+                      labelText: "Harga",
+                      hintText: "Masukkan harga",
                       border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.inventory),
+                      prefixIcon: Icon(Icons.attach_money),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  TextField(
+                    controller: _stockController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: "Stok Gudang",
+                      hintText: "Masukkan stok gudang",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.storage),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  TextField(
+                    controller: _satuanController,
+                    decoration: const InputDecoration(
+                      labelText: "Satuan",
+                      hintText: "Masukkan satuan (pcs, kg, dll)",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.scale),
+                    ),
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Image Picker
+                  GestureDetector(
+                    onTap: _pickImage,
+                    child: Container(
+                      height: 150,
+                      width: double.infinity,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: Colors.grey),
+                        borderRadius: BorderRadius.circular(8),
+                      ),
+                      child: _imageFile != null
+                          ? Image.file(_imageFile!, fit: BoxFit.cover)
+                          : const Column(
+                              mainAxisAlignment: MainAxisAlignment.center,
+                              children: [
+                                Icon(
+                                  Icons.add_a_photo,
+                                  size: 50,
+                                  color: Colors.grey,
+                                ),
+                                SizedBox(height: 8),
+                                Text(
+                                  'Pilih Gambar',
+                                  style: TextStyle(color: Colors.grey),
+                                ),
+                              ],
+                            ),
                     ),
                   ),
                   const SizedBox(height: 24),
@@ -244,7 +293,7 @@ class _AddProductGudangScreenState extends State<AddProductGudangScreen> {
                     child: ElevatedButton(
                       onPressed: _isLoading ? null : _addProduct,
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.blue,
+                        backgroundColor: Colors.green,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(12),
                         ),

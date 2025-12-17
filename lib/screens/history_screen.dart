@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:smart_cashier/screens/kasir_screen.dart';
 import 'dart:convert';
 import '../models/transaction_history.dart';
-import 'home_screen.dart';
 import 'report_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -195,7 +195,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         if (index == 0) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const HomeScreen()),
+            MaterialPageRoute(builder: (context) => const KasirScreen()),
           );
         } else if (index == 2) {
           Navigator.pushReplacement(
