@@ -302,20 +302,46 @@ class _KasirScreenState extends State<KasirScreen> {
                   ? const Center(child: CircularProgressIndicator())
                   : errorMessage.isNotEmpty
                   ? Center(child: Text(errorMessage))
-                  : ListView(
-                      padding: const EdgeInsets.all(12),
-                      children: () {
+                  : Builder(
+                      builder: (context) {
                         List<Product> filteredProducts = products
                             .where(
                               (p) => p.name.toLowerCase().contains(
                                 searchQuery.toLowerCase(),
                               ),
                             )
+                            .where((p) {
+                              if (selectedCategoryIndex == 0) {
+                                return true; // Semua
+                              } else {
+                                return p.category ==
+                                    categories[selectedCategoryIndex];
+                              }
+                            })
                             .toList();
-                        return filteredProducts
-                            .map((product) => _menuItem(product))
-                            .toList();
-                      }(),
+
+                        if (filteredProducts.isEmpty) {
+                          String categoryName = selectedCategoryIndex == 0
+                              ? "produk"
+                              : "kategori ${categories[selectedCategoryIndex]}";
+                          return Center(
+                            child: Text(
+                              "Tidak ada item $categoryName",
+                              style: const TextStyle(
+                                fontSize: 16,
+                                color: Colors.grey,
+                              ),
+                            ),
+                          );
+                        }
+
+                        return ListView(
+                          padding: const EdgeInsets.all(12),
+                          children: filteredProducts
+                              .map((product) => _menuItem(product))
+                              .toList(),
+                        );
+                      },
                     ),
             ),
             _bottomBar(),
