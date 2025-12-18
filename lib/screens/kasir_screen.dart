@@ -3,6 +3,7 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/product.dart';
+import '../models/cart_item.dart';
 import '../widgets/kasir_drawer.dart';
 import '../widgets/category_menu.dart';
 import 'history_screen.dart';
@@ -16,8 +17,10 @@ class KasirScreen extends StatefulWidget {
 }
 
 class _KasirScreenState extends State<KasirScreen> {
-  int totalItem = 0;
-  int subtotal = 0;
+  List<CartItem> cart = [];
+
+  int get totalItem => cart.fold(0, (sum, item) => sum + item.qty);
+  int get subtotal => cart.fold(0, (sum, item) => sum + item.total);
 
   int selectedCategoryIndex = 0;
   int selectedDrawerIndex = 0;
@@ -135,7 +138,9 @@ class _KasirScreenState extends State<KasirScreen> {
           } else if (index == 2) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const PengeluaranScreen()),
+              MaterialPageRoute(
+                builder: (context) => const PengeluaranScreen(),
+              ),
             );
           }
         },
@@ -264,7 +269,7 @@ class _KasirScreenState extends State<KasirScreen> {
   Widget _menuItem(Product product) {
     return GestureDetector(
       onTap: () {
-        _showQtyDialog(title: product.name, price: product.price);
+        _showQtyDialog(product);
       },
       child: Container(
         margin: const EdgeInsets.only(bottom: 10),
@@ -309,7 +314,7 @@ class _KasirScreenState extends State<KasirScreen> {
   }
 
   // ================= QTY DIALOG =================
-  void _showQtyDialog({required String title, required String price}) {
+  void _showQtyDialog(Product product) {
     int qty = 1;
 
     showDialog(
@@ -328,7 +333,7 @@ class _KasirScreenState extends State<KasirScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text(
-                      title,
+                      product.name,
                       style: const TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
@@ -336,7 +341,7 @@ class _KasirScreenState extends State<KasirScreen> {
                     ),
                     const SizedBox(height: 6),
                     Text(
-                      "Rp${double.parse(price).toInt()}",
+                      "Rp${double.parse(product.price).toInt()}",
                       style: const TextStyle(
                         color: Colors.red,
                         fontWeight: FontWeight.bold,
@@ -399,8 +404,24 @@ class _KasirScreenState extends State<KasirScreen> {
                           child: ElevatedButton(
                             onPressed: () {
                               setState(() {
-                                totalItem += qty;
-                                subtotal += double.parse(price).toInt() * qty;
+                                // Check if product already in cart
+                                int index = cart.indexWhere(
+                                  (item) => item.productId == product.id,
+                                );
+                                if (index != -1) {
+                                  cart[index].qty += qty;
+                                } else {
+                                  cart.add(
+                                    CartItem(
+                                      productId: product.id,
+                                      name: product.name,
+                                      price: double.parse(
+                                        product.price,
+                                      ).toInt(),
+                                      qty: qty,
+                                    ),
+                                  );
+                                }
                               });
                               Navigator.pop(context);
                             },
@@ -439,10 +460,7 @@ class _KasirScreenState extends State<KasirScreen> {
       width: 60,
       height: 60,
       color: Colors.grey.shade300,
-      child: const Icon(
-        Icons.image_not_supported,
-        color: Colors.grey,
-      ),
+      child: const Icon(Icons.image_not_supported, color: Colors.grey),
     );
   }
 
@@ -475,15 +493,7 @@ class _KasirScreenState extends State<KasirScreen> {
           ),
           InkWell(
             onTap: () {
-              Navigator.pushNamed(
-                context,
-                '/order',
-                arguments: {
-                  'title': 'Ayam Goreng Sambal Merah',
-                  'price': 20000,
-                  'qty': totalItem,
-                },
-              );
+              Navigator.pushNamed(context, '/order', arguments: cart);
             },
             child: const Row(
               children: [

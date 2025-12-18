@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import '../models/cart_item.dart';
 
 class OrderDetailScreen extends StatefulWidget {
   const OrderDetailScreen({super.key});
@@ -8,35 +9,24 @@ class OrderDetailScreen extends StatefulWidget {
 }
 
 class _OrderDetailScreenState extends State<OrderDetailScreen> {
-  late int qty;
-  late int price;
-  late String title;
+  late List<CartItem> cartItems;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
 
-    final args =
-        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
-
-    qty = args['qty'];
-    price = args['price'];
-    title = args['title'];
+    cartItems = ModalRoute.of(context)!.settings.arguments as List<CartItem>;
   }
 
   @override
   Widget build(BuildContext context) {
-    int totalBayar = qty * price;
+    int totalKeseluruhan = cartItems.fold(0, (sum, item) => sum + item.total);
 
     return Scaffold(
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
         leading: IconButton(
-          icon: const Icon(
-            Icons.arrow_back_ios,
-            color: Colors.white,
-            size: 18,
-          ),
+          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
           onPressed: () {
             Navigator.pop(context);
           },
@@ -51,89 +41,96 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // ================= BODY =================
       body: Padding(
         padding: const EdgeInsets.all(12),
-        child: Column(
-          children: [
-            // ================= CARD ITEM =================
-Container(
-  padding: const EdgeInsets.all(12),
-  decoration: BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(14),
-  ),
-  child: Row(
-    crossAxisAlignment: CrossAxisAlignment.center, // TENGAH VERTIKAL
-    children: [
-      ClipRRect(
-        borderRadius: BorderRadius.circular(10),
-        child: Image.asset(
-          "assets/images/kopi.png",
-          width: 60,
-          height: 60,
-          fit: BoxFit.cover,
-        ),
-      ),
-      const SizedBox(width: 12),
-
-      Expanded(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text(
-              title,
-              style: const TextStyle(fontWeight: FontWeight.bold),
-            ),
-            Text(
-              "Rp$price",
-              style: const TextStyle(color: Colors.red),
-            ),
-          ],
-        ),
-      ),
-
-      // ========= QTY CONTROL DI TENGAH KANAN =========
-      Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          _qtyButton(
-            icon: Icons.remove,
-            onTap: () {
-              if (qty > 1) {
-                setState(() => qty--);
-              }
-            },
-          ),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 8),
-            child: Text(
-              qty.toString(),
-              style: const TextStyle(
-                fontWeight: FontWeight.bold,
-                fontSize: 14,
+        child: ListView.builder(
+          itemCount: cartItems.length,
+          itemBuilder: (context, index) {
+            CartItem item = cartItems[index];
+            return Container(
+              margin: const EdgeInsets.only(bottom: 10),
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(14),
               ),
-            ),
-          ),
-          _qtyButton(
-            icon: Icons.add,
-            onTap: () {
-              setState(() => qty++);
-            },
-          ),
-        ],
-      ),
-    ],
-  ),
-)
-
-          ],
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  ClipRRect(
+                    borderRadius: BorderRadius.circular(10),
+                    child: Container(
+                      width: 60,
+                      height: 60,
+                      color: Colors.grey.shade300,
+                      child: const Icon(
+                        Icons.image_not_supported,
+                        color: Colors.grey,
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  Expanded(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          item.name,
+                          style: const TextStyle(fontWeight: FontWeight.bold),
+                        ),
+                        Text(
+                          "Rp${item.price}",
+                          style: const TextStyle(color: Colors.red),
+                        ),
+                        Text(
+                          "Total: Rp${item.total}",
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            color: Colors.green,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      _qtyButton(
+                        icon: Icons.remove,
+                        onTap: () {
+                          if (item.qty > 1) {
+                            setState(() => item.qty--);
+                          }
+                        },
+                      ),
+                      Padding(
+                        padding: const EdgeInsets.symmetric(horizontal: 8),
+                        child: Text(
+                          item.qty.toString(),
+                          style: const TextStyle(
+                            fontWeight: FontWeight.bold,
+                            fontSize: 14,
+                          ),
+                        ),
+                      ),
+                      _qtyButton(
+                        icon: Icons.add,
+                        onTap: () {
+                          setState(() => item.qty++);
+                        },
+                      ),
+                    ],
+                  ),
+                ],
+              ),
+            );
+          },
         ),
       ),
 
       // ================= BOTTOM BAR BAYAR =================
       bottomNavigationBar: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, '/payment'); 
-          // Ganti '/payment' sesuai route page pembayaran kamu
+          Navigator.pushNamed(context, '/payment');
         },
         child: Container(
           padding: const EdgeInsets.all(14),
@@ -155,15 +152,15 @@ Container(
               Row(
                 children: [
                   Text(
-                    "Rp$totalBayar",
+                    "Rp$totalKeseluruhan",
                     style: const TextStyle(
                       color: Colors.white,
                       fontSize: 16,
                       fontWeight: FontWeight.bold,
                     ),
                   ),
-                  SizedBox(width: 6),
-                  Icon(
+                  const SizedBox(width: 6),
+                  const Icon(
                     Icons.arrow_forward_ios,
                     color: Colors.white,
                     size: 16,
