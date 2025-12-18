@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
+import '../widgets/kasir_drawer.dart';
+import 'kasir_screen.dart';
+import 'history_screen.dart';
 
 class PengeluaranScreen extends StatefulWidget {
   const PengeluaranScreen({super.key});
@@ -14,6 +17,7 @@ class _PengeluaranScreenState extends State<PengeluaranScreen> {
   final TextEditingController _deskripsiController = TextEditingController();
   final TextEditingController _jumlahController = TextEditingController();
 
+  int selectedDrawerIndex = 2; 
   bool _isLoading = false;
   String _errorMessage = '';
   String _successMessage = '';
@@ -76,7 +80,7 @@ class _PengeluaranScreenState extends State<PengeluaranScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/pengeluaran/'),
+        Uri.parse('https://flutter001.pythonanywhere.com/api/pengeluaran/'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token $token',
@@ -120,16 +124,56 @@ class _PengeluaranScreenState extends State<PengeluaranScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
+
+      // ================= DRAWER =================
+      drawer: KasirDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const KasirScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          }
+        },
+      ),
+
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        elevation: 0,
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Builder(
+          builder: (context) => Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+              const Text(
+                "Pengeluaran",
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ],
+          ),
         ),
-        title: const Text("Pengeluaran", style: TextStyle(color: Colors.white)),
-        centerTitle: true,
       ),
       body: SafeArea(
         child: Padding(

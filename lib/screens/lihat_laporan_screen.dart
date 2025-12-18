@@ -55,7 +55,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
         return;
       }
 
-      String url = 'http://127.0.0.1:8000/api/pengeluaran/list/';
+      String url = 'https://flutter001.pythonanywhere.com/api/pengeluaran/list/';
       if (selectedDate != null) {
         url += '?date=${dateFormat.format(selectedDate!)}';
       }

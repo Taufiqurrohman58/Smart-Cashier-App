@@ -6,7 +6,7 @@ import '../models/product.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/category_menu.dart';
 import 'history_screen.dart';
-import 'laporan_screen.dart';
+import 'lihat_laporan_screen.dart';
 import 'ai_insight_screen.dart';
 import 'stok_management_screen.dart';
 import 'master_data_screen.dart';

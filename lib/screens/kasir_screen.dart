@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/product.dart';
 import '../models/cart_item.dart';
+import '../models/category.dart';
 import '../widgets/kasir_drawer.dart';
 import '../widgets/category_menu.dart';
 import 'history_screen.dart';
-import 'pengeluaran_screen.dart';
+import 'tambah_pengeluaran_screen.dart';
 
 class KasirScreen extends StatefulWidget {
   const KasirScreen({super.key});
@@ -29,7 +30,9 @@ class _KasirScreenState extends State<KasirScreen> {
   TextEditingController searchController = TextEditingController();
   String searchQuery = '';
 
-  final List<String> categories = ["Semua", "Makanan", "Minuman", "Snack"];
+  List<String> categories = [];
+  List<Category> categoryList = [];
+  bool isCategoriesLoading = true;
 
   List<Product> products = [];
   bool isLoading = true;
@@ -41,6 +44,7 @@ class _KasirScreenState extends State<KasirScreen> {
   void initState() {
     super.initState();
     print('KasirScreen: initState called');
+    _fetchCategories();
     _fetchProducts();
     _loadUserData();
   }
@@ -57,6 +61,60 @@ class _KasirScreenState extends State<KasirScreen> {
       userName = prefs.getString('user_name') ?? 'User';
       userRole = prefs.getString('user_role') ?? 'Role';
     });
+  }
+
+  Future<void> _fetchCategories() async {
+    print('KasirScreen: _fetchCategories called');
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        setState(() {
+          errorMessage = 'Token tidak ditemukan';
+          isCategoriesLoading = false;
+        });
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse('https://flutter001.pythonanywhere.com/api/categories/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+      );
+
+      print(
+        'KasirScreen: Categories API response status: ${response.statusCode}',
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        setState(() {
+          categoryList = data.map((json) => Category.fromJson(json)).toList();
+          categories = ["Semua"] + categoryList.map((c) => c.name).toList();
+          isCategoriesLoading = false;
+        });
+        print(
+          'KasirScreen: Categories loaded successfully, count: ${categories.length}',
+        );
+      } else {
+        setState(() {
+          categories = ["Semua"];
+          isCategoriesLoading = false;
+        });
+        print(
+          'KasirScreen: Failed to load categories, status: ${response.statusCode}',
+        );
+      }
+    } catch (e) {
+      setState(() {
+        categories = ["Semua"];
+        isCategoriesLoading = false;
+      });
+      print('KasirScreen: Error fetching categories: $e');
+    }
   }
 
   Future<void> _fetchProducts() async {
@@ -230,6 +288,8 @@ class _KasirScreenState extends State<KasirScreen> {
         child: Column(
           children: [
             CategoryMenu(
+              categories: categories,
+              isLoading: isCategoriesLoading,
               selectedIndex: selectedCategoryIndex,
               onIndexChanged: (index) {
                 setState(() {

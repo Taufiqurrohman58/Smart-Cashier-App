@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:smart_cashier/screens/kasir_screen.dart';
 import 'dart:convert';
 import '../models/transaction_history.dart';
-import 'report_screen.dart';
+import 'tambah_pengeluaran_screen.dart';
 import 'history_detail_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
@@ -174,7 +174,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
           _drawerItem(icon: Icons.home, title: "Beranda", index: 0),
           _drawerItem(icon: Icons.history, title: "History", index: 1),
-          _drawerItem(icon: Icons.bar_chart, title: "Laporan", index: 2),
+          _drawerItem(icon: Icons.bar_chart, title: "Pengeluaran", index: 2),
         ],
       ),
     );
@@ -201,7 +201,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
         } else if (index == 2) {
           Navigator.pushReplacement(
             context,
-            MaterialPageRoute(builder: (context) => const ReportScreen()),
+            MaterialPageRoute(builder: (context) => const PengeluaranScreen()),
           );
         }
       },

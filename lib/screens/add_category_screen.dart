@@ -12,7 +12,6 @@ class AddCategoryScreen extends StatefulWidget {
 
 class _AddCategoryScreenState extends State<AddCategoryScreen> {
   final TextEditingController _nameController = TextEditingController();
-  final TextEditingController _descriptionController = TextEditingController();
 
   bool _isLoading = false;
   String _errorMessage = '';
@@ -21,7 +20,6 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
   @override
   void dispose() {
     _nameController.dispose();
-    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -52,23 +50,19 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
       }
 
       final response = await http.post(
-        Uri.parse('http://127.0.0.1:8000/api/kategori/tambah/'),
+        Uri.parse('https://flutter001.pythonanywhere.com/api/categories/'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token $token',
         },
-        body: json.encode({
-          "name": _nameController.text,
-          "description": _descriptionController.text,
-        }),
+        body: json.encode({"name": _nameController.text}),
       );
 
       if (response.statusCode == 201) {
         final data = json.decode(response.body);
         setState(() {
-          _successMessage = data['message'] ?? 'Kategori berhasil ditambahkan';
+          _successMessage = 'Kategori "${data['name']}" berhasil ditambahkan';
           _nameController.clear();
-          _descriptionController.clear();
         });
       } else {
         setState(() {
@@ -111,18 +105,12 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
           children: [
             const Text(
               "Tambah Kategori Baru",
-              style: TextStyle(
-                fontSize: 24,
-                fontWeight: FontWeight.bold,
-              ),
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
             ),
             const SizedBox(height: 8),
             const Text(
               "Tambahkan kategori produk baru",
-              style: TextStyle(
-                color: Colors.grey,
-                fontSize: 16,
-              ),
+              style: TextStyle(color: Colors.grey, fontSize: 16),
             ),
             const SizedBox(height: 32),
 
@@ -141,18 +129,6 @@ class _AddCategoryScreenState extends State<AddCategoryScreen> {
                       hintText: "Masukkan nama kategori",
                       border: OutlineInputBorder(),
                       prefixIcon: Icon(Icons.category),
-                    ),
-                  ),
-                  const SizedBox(height: 20),
-
-                  TextField(
-                    controller: _descriptionController,
-                    maxLines: 3,
-                    decoration: const InputDecoration(
-                      labelText: "Deskripsi (Opsional)",
-                      hintText: "Masukkan deskripsi kategori",
-                      border: OutlineInputBorder(),
-                      prefixIcon: Icon(Icons.description),
                     ),
                   ),
                   const SizedBox(height: 24),
