@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 // import 'screens/checkout_screen.dart';
 import 'screens/kasir_screen.dart';
 import 'screens/admin_screen.dart';
@@ -32,7 +33,7 @@ class MainApp extends StatelessWidget {
         useMaterial3: true,
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.red),
       ),
-      initialRoute: '/login',
+      home: const AuthWrapper(),
       routes: {
         '/login': (context) => const LoginScreen(),
         '/register': (context) => const RegisterScreen(),
@@ -46,6 +47,44 @@ class MainApp extends StatelessWidget {
         '/stok-management': (context) => const StokManagementScreen(),
         '/master-data': (context) => const MasterDataScreen(),
         // '/checkout': (context) => CheckoutScreen(),
+      },
+    );
+  }
+}
+
+class AuthWrapper extends StatelessWidget {
+  const AuthWrapper({super.key});
+
+  Future<Widget> _getInitialScreen() async {
+    final prefs = await SharedPreferences.getInstance();
+    final token = prefs.getString('auth_token');
+    final role = prefs.getString('user_role');
+
+    if (token != null && role != null) {
+      if (role == 'kasir') {
+        return const KasirScreen();
+      } else {
+        return const AdminScreen();
+      }
+    } else {
+      return const LoginScreen();
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Widget>(
+      future: _getInitialScreen(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return const Scaffold(
+            body: Center(child: CircularProgressIndicator()),
+          );
+        } else if (snapshot.hasError) {
+          return const Scaffold(body: Center(child: Text('Error loading app')));
+        } else {
+          return snapshot.data!;
+        }
       },
     );
   }
