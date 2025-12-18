@@ -6,7 +6,6 @@ import '../models/product.dart';
 import '../widgets/kasir_drawer.dart';
 import '../widgets/category_menu.dart';
 import 'history_screen.dart';
-import 'report_screen.dart';
 import 'pengeluaran_screen.dart';
 
 class KasirScreen extends StatefulWidget {
@@ -76,7 +75,7 @@ class _KasirScreenState extends State<KasirScreen> {
       }
 
       final response = await http.get(
-        Uri.parse('http://127.0.0.1:8000/api/kantin/produk/'),
+        Uri.parse('https://flutter001.pythonanywhere.com/api/kantin/produk/'),
         headers: {
           'Content-Type': 'application/json',
           'Authorization': 'Token $token', // 🔥 WAJIB ganti ke "Token"

@@ -68,6 +68,69 @@ class _ProdukGudangScreenState extends State<ProdukGudangScreen> {
     }
   }
 
+  Future<void> _deleteProduct(GudangProduct product) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text('Konfirmasi Hapus'),
+        content: const Text('Apakah Anda yakin ingin menghapus produk ini?'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(context, false),
+            child: const Text('Batal'),
+          ),
+          TextButton(
+            onPressed: () => Navigator.pop(context, true),
+            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      ),
+    );
+
+    if (confirm != true) return;
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Token tidak ditemukan')));
+        return;
+      }
+
+      final response = await http.delete(
+        Uri.parse(
+          'https://flutter001.pythonanywhere.com/api/gudang/produk/${product.id}/',
+        ),
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 204) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Produk berhasil dihapus')),
+        );
+        _fetchProducts(); // Refresh the list
+      } else {
+        String errorMessage = 'Error: ${response.statusCode}';
+        try {
+          final data = json.decode(response.body);
+          errorMessage = data['message'] ?? errorMessage;
+        } catch (e) {
+          // If response body is empty or not JSON, use default error message
+        }
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(SnackBar(content: Text(errorMessage)));
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Error: $e')));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -145,9 +208,7 @@ class _ProdukGudangScreenState extends State<ProdukGudangScreen> {
                             ),
                             IconButton(
                               icon: const Icon(Icons.delete, color: Colors.red),
-                              onPressed: () {
-                                // Delete action
-                              },
+                              onPressed: () => _deleteProduct(product),
                             ),
                           ],
                         ),

@@ -138,82 +138,6 @@ class _UpdateProdukGudangScreenState extends State<UpdateProdukGudangScreen> {
     }
   }
 
-  Future<void> _deleteProduct() async {
-    final confirm = await showDialog<bool>(
-      context: context,
-      builder: (context) => AlertDialog(
-        title: const Text('Konfirmasi Hapus'),
-        content: const Text('Apakah Anda yakin ingin menghapus produk ini?'),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.pop(context, false),
-            child: const Text('Batal'),
-          ),
-          TextButton(
-            onPressed: () => Navigator.pop(context, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.red)),
-          ),
-        ],
-      ),
-    );
-
-    if (confirm != true) return;
-
-    setState(() {
-      _isLoading = true;
-      _errorMessage = '';
-      _successMessage = '';
-    });
-
-    try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
-
-      if (token == null) {
-        setState(() {
-          _errorMessage = 'Token tidak ditemukan';
-          _isLoading = false;
-        });
-        return;
-      }
-
-      final response = await http.delete(
-        Uri.parse(
-          'https://flutter001.pythonanywhere.com/api/gudang/produk/${widget.product.id}/',
-        ),
-        headers: {'Authorization': 'Token $token'},
-      );
-
-      if (response.statusCode == 204) {
-        setState(() {
-          _successMessage = 'Produk berhasil dihapus';
-        });
-        Future.delayed(const Duration(seconds: 2), () {
-          Navigator.pop(context, true); // Return true to indicate deletion
-        });
-      } else {
-        String errorMessage = 'Error: ${response.statusCode}';
-        try {
-          final data = json.decode(response.body);
-          errorMessage = data['message'] ?? errorMessage;
-        } catch (e) {
-          // If response body is empty or not JSON, use default error message
-        }
-        setState(() {
-          _errorMessage = errorMessage;
-        });
-      }
-    } catch (e) {
-      setState(() {
-        _errorMessage = 'Error: $e';
-      });
-    } finally {
-      setState(() {
-        _isLoading = false;
-      });
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -231,12 +155,6 @@ class _UpdateProdukGudangScreenState extends State<UpdateProdukGudangScreen> {
           style: TextStyle(color: Colors.white),
         ),
         centerTitle: true,
-        actions: [
-          IconButton(
-            icon: const Icon(Icons.delete, color: Colors.red),
-            onPressed: _isLoading ? null : _deleteProduct,
-          ),
-        ],
       ),
       body: SingleChildScrollView(
         padding: const EdgeInsets.all(20),

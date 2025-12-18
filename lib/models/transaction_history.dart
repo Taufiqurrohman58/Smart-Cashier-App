@@ -1,7 +1,7 @@
 class TransactionItem {
   final String name;
   final int qty;
-  final String subtotal;
+  final int subtotal;
 
   TransactionItem({
     required this.name,
@@ -13,16 +13,16 @@ class TransactionItem {
     return TransactionItem(
       name: json['name'],
       qty: json['qty'],
-      subtotal: json['subtotal'],
+      subtotal: (json['subtotal'] as num).toInt(),
     );
   }
 }
 
 class TransactionHistory {
   final String invoice;
-  final String total;
-  final String uangBayar;
-  final String kembalian;
+  final int total;
+  final int uangBayar;
+  final int kembalian;
   final String kasir;
   final String createdAt;
   final List<TransactionItem> items;
@@ -40,13 +40,13 @@ class TransactionHistory {
   factory TransactionHistory.fromJson(Map<String, dynamic> json) {
     return TransactionHistory(
       invoice: json['invoice'],
-      total: json['total'],
-      uangBayar: json['uang_bayar'],
-      kembalian: json['kembalian'],
+      total: (json['total'] as num).toInt(),
+      uangBayar: (json['uang_bayar'] as num).toInt(),
+      kembalian: (json['kembalian'] as num).toInt(),
       kasir: json['kasir'],
       createdAt: json['created_at'],
-      items: (json['items'] as List<dynamic>)
-          .map((item) => TransactionItem.fromJson(item))
+      items: (json['items'] as List)
+          .map((e) => TransactionItem.fromJson(e))
           .toList(),
     );
   }
