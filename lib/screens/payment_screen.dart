@@ -1,4 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../models/cart_item.dart';
 
 class PaymentScreen extends StatefulWidget {
   const PaymentScreen({super.key});
@@ -8,13 +12,17 @@ class PaymentScreen extends StatefulWidget {
 }
 
 class _PaymentScreenState extends State<PaymentScreen> {
+  late List<CartItem> cartItems;
   late int total;
-  int bayar = 50000;
+  int bayar = 0;
 
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    total = ModalRoute.of(context)!.settings.arguments as int;
+    final args =
+        ModalRoute.of(context)!.settings.arguments as Map<String, dynamic>;
+    cartItems = args['cart'] as List<CartItem>;
+    total = args['total'] as int;
   }
 
   @override
@@ -196,22 +204,31 @@ class _PaymentScreenState extends State<PaymentScreen> {
     }
 
     try {
-      // ===============================
-      // SIMULASI API BACKEND
-      // Ganti nanti dengan API asli
-      // ===============================
-      await Future.delayed(const Duration(seconds: 1));
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
 
-      bool backendError = false; // UBAH true untuk test error
-
-      if (backendError) {
-        throw Exception("Server sedang bermasalah");
+      if (token == null) {
+        throw Exception("Token tidak ditemukan");
       }
 
-      // ===============================
-      // JIKA BERHASIL
-      // ===============================
-      _showSuccessDialog();
+      final items = cartItems
+          .map((item) => {'product_id': item.productId, 'qty': item.qty})
+          .toList();
+
+      final response = await http.post(
+        Uri.parse('https://flutter001.pythonanywhere.com/api/payment/'),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+        body: json.encode({'items': items, 'uang_bayar': bayar}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        _showSuccessDialog();
+      } else {
+        throw Exception('Gagal memproses pembayaran (${response.statusCode})');
+      }
     } catch (e) {
       _showToast(e.toString().replaceAll("Exception:", "").trim());
     }

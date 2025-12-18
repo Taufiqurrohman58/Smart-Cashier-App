@@ -130,7 +130,11 @@ class _OrderDetailScreenState extends State<OrderDetailScreen> {
       // ================= BOTTOM BAR BAYAR =================
       bottomNavigationBar: InkWell(
         onTap: () {
-          Navigator.pushNamed(context, '/payment');
+          Navigator.pushNamed(
+            context,
+            '/payment',
+            arguments: {'cart': cartItems, 'total': totalKeseluruhan},
+          );
         },
         child: Container(
           padding: const EdgeInsets.all(14),
