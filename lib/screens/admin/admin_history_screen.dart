@@ -3,10 +3,22 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../models/transaction_history.dart';
-import 'history_detail_screen.dart';
-import '../../widgets/kasir_drawer.dart';
-import '../kasir/kasir_screen.dart';
-import '../kasir/tambah_pengeluaran_screen.dart';
+import '../admin&kasir/history_detail_screen.dart';
+import '../admin_screen.dart';
+import 'laporan/laporan_pengeluaran_screen.dart';
+import 'laporan/laporan_harian_screen.dart';
+import 'laporan/laporan_bulanan_screen.dart';
+import 'laporan/laporan_tahunan_screen.dart';
+import 'laporan/export_laporan_screen.dart';
+import 'management-stok/transfer_stok_screen.dart';
+import 'management-stok/tambah_stok_screen.dart';
+import 'ai/penjualan_terlaris_screen.dart';
+import 'ai/rekomendasi_stok_screen.dart';
+import 'ai/prediksi_habis_screen.dart';
+import '../../widgets/admin_drawer.dart';
+import '../admin/master-data/add_category_screen.dart';
+import '../admin/master-data/produk_gudang_screen.dart';
+import '../admin/master-data/add_user_kasir_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -86,7 +98,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
-      drawer: KasirDrawer(
+      drawer: AdminDrawer(
         userName: userName,
         userRole: userRole,
         selectedIndex: selectedDrawerIndex,
@@ -98,12 +110,87 @@ class _HistoryScreenState extends State<HistoryScreen> {
           if (index == 0) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const KasirScreen()),
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
             );
-          } else if (index == 2) {
+          } else if (index == 10) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const PengeluaranScreen()),
+              MaterialPageRoute(builder: (context) => const LaporanScreen()),
+            );
+          } else if (index == 7) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const LaporanHarianScreen(),
+              ),
+            );
+          } else if (index == 8) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporanBulananScreen()),
+            );
+          } else if (index == 9) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporanTahunanScreen()),
+            );
+          } else if (index == 11) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ExportLaporanScreen()),
+            );
+          } else if (index == 15) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const TransferStokScreen(),
+              ),
+            );
+          } else if (index == 16) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const TambahStokScreen()),
+            );
+          } else if (index == 11) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const ExportLaporanScreen(),
+              ),
+            );
+          } else if (index == 12) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ProdukGudangScreen()),
+            );
+          } else if (index == 14) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AddUserKasirScreen()),
+            );
+          } else if (index == 13) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AddCategoryScreen()),
+            );
+          } else if (index == 17) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PenjualanTerlarisScreen(),
+              ),
+            );
+          } else if (index == 18) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const RekomendasiStokScreen()),
+            );
+          } else if (index == 17) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const PrediksiHabisScreen(),
+              ),
             );
           }
         },

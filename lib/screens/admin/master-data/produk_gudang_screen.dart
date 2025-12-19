@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/stok_models.dart';
+import '../../../models/stok_models.dart';
 import 'update_produk_gudang_screen.dart';
 import 'add_product_gudang_screen.dart';
 

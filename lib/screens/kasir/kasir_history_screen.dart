@@ -3,13 +3,10 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../models/transaction_history.dart';
-import 'history_detail_screen.dart';
-import '../admin_screen.dart';
-import '../laporan_pengeluaran_screen.dart';
-import '../ai_insight_screen.dart';
-import '../stok_management_screen.dart';
-import '../master_data_screen.dart';
-import '../../widgets/admin_drawer.dart';
+import '../admin&kasir/history_detail_screen.dart';
+import '../../widgets/kasir_drawer.dart';
+import 'kasir_screen.dart';
+import 'tambah_pengeluaran_screen.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -89,7 +86,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
-      drawer: AdminDrawer(
+      drawer: KasirDrawer(
         userName: userName,
         userRole: userRole,
         selectedIndex: selectedDrawerIndex,
@@ -101,29 +98,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
           if (index == 0) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const AdminScreen()),
+              MaterialPageRoute(builder: (context) => const KasirScreen()),
             );
           } else if (index == 2) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const LaporanScreen()),
-            );
-          } else if (index == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const StokManagementScreen()),
-            );
-          } else if (index == 4) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(
-                builder: (context) => const MasterDataScreen(),
-              ),
-            );
-          } else if (index == 5) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+              MaterialPageRoute(builder: (context) => const PengeluaranScreen()),
             );
           }
         },

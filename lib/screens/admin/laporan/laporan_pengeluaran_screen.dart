@@ -3,14 +3,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
-import '../models/pengeluaran.dart';
-import 'admin_screen.dart';
-import 'admin&kasir/admin_history_screen.dart';
-import 'ai_insight_screen.dart';
-import 'stok_management_screen.dart';
-import 'master_data_screen.dart';
-import '../widgets/admin_drawer.dart';
-import 'report_menu_screen.dart';
+import '../../../models/pengeluaran.dart';
+import '../../admin_screen.dart';
+import '../admin_history_screen.dart';
+import '../../../widgets/admin_drawer.dart';
+
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({super.key});
@@ -132,40 +129,91 @@ class _LaporanScreenState extends State<LaporanScreen> {
             selectedDrawerIndex = index;
           });
           Navigator.pop(context);
-          if (index == 0) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AdminScreen()),
-            );
-          } else if (index == 1) {
+          if (index == 1) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const HistoryScreen()),
             );
-          } else if (index == 2) {
-            // Already on Laporan Pengeluaran
-          } else if (index == 3) {
+          } else if (index == 0) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(
-                builder: (context) => const StokManagementScreen(),
-              ),
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
             );
-          } else if (index == 4) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const MasterDataScreen()),
-            );
-          } else if (index == 5) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const ReportMenuScreen()),
-            );
-          } else if (index == 6) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
-            );
+          // } else if (index == 7) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => const LaporanHarianScreen(),
+          //     ),
+          //   );
+          // } else if (index == 8) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const LaporanBulananScreen()),
+          //   );
+          // } else if (index == 9) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const LaporanTahunanScreen()),
+          //   );
+          // } else if (index == 11) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const ExportLaporanScreen()),
+          //   );
+          // } else if (index == 15) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => const TransferStokScreen(),
+          //     ),
+          //   );
+          // } else if (index == 16) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const TambahStokScreen()),
+          //   );
+          // } else if (index == 11) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => const ExportLaporanScreen(),
+          //     ),
+          //   );
+          // } else if (index == 12) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const ProdukGudangScreen()),
+          //   );
+          // } else if (index == 14) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const AddUserKasirScreen()),
+          //   );
+          // } else if (index == 13) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const AddCategoryScreen()),
+          //   );
+          // } else if (index == 17) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => const PenjualanTerlarisScreen(),
+          //     ),
+          //   );
+          // } else if (index == 18) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(builder: (context) => const RekomendasiStokScreen()),
+          //   );
+          // } else if (index == 17) {
+          //   Navigator.pushReplacement(
+          //     context,
+          //     MaterialPageRoute(
+          //       builder: (context) => const PrediksiHabisScreen(),
+          //     ),
+          //   );
           }
         },
       ),

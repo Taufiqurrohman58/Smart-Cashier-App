@@ -7,7 +7,7 @@ import '../../models/cart_item.dart';
 import '../../models/category.dart';
 import '../../widgets/kasir_drawer.dart';
 import '../../widgets/category_menu.dart';
-import '../admin&kasir/kasir_history_screen.dart';
+import 'kasir_history_screen.dart';
 import 'tambah_pengeluaran_screen.dart';
 
 class KasirScreen extends StatefulWidget {

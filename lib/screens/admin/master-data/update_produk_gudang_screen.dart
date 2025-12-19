@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
-import '../models/stok_models.dart';
+import '../../../models/stok_models.dart';
 
 class UpdateProdukGudangScreen extends StatefulWidget {
   final GudangProduct product;

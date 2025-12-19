@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-// import 'screens/checkout_screen.dart';
 import 'screens/kasir/kasir_screen.dart';
 import 'screens/admin_screen.dart';
 import 'screens/admin&kasir/LoginScreen.dart';
@@ -8,10 +7,6 @@ import 'screens/admin/RegisterScreen.dart';
 import 'screens/kasir/payment_screen.dart';
 import 'screens/kasir/order_detail_screen.dart';
 import 'screens/kasir/tambah_pengeluaran_screen.dart';
-import 'screens/laporan_pengeluaran_screen.dart';
-import 'screens/ai_insight_screen.dart';
-import 'screens/stok_management_screen.dart';
-import 'screens/master_data_screen.dart';
 
 // ✅ TAMBAHKAN INI
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -42,11 +37,6 @@ class MainApp extends StatelessWidget {
         '/order': (context) => OrderDetailScreen(),
         '/payment': (context) => PaymentScreen(),
         '/pengeluaran': (context) => const PengeluaranScreen(),
-        '/laporan': (context) => const LaporanScreen(),
-        '/ai-insight': (context) => const AiInsightScreen(),
-        '/stok-management': (context) => const StokManagementScreen(),
-        '/master-data': (context) => const MasterDataScreen(),
-        // '/checkout': (context) => CheckoutScreen(),
       },
     );
   }
