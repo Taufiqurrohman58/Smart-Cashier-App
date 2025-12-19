@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:smart_cashier/screens/kasir/kasir_screen.dart';
-import 'admin&kasir/history_screen.dart';
+import 'admin&kasir/admin_history_screen.dart';
 
 class ReportScreen extends StatefulWidget {
   const ReportScreen({super.key});

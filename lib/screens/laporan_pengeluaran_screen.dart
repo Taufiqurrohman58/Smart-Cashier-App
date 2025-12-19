@@ -5,11 +5,12 @@ import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../models/pengeluaran.dart';
 import 'admin_screen.dart';
-import 'admin&kasir/history_screen.dart';
+import 'admin&kasir/admin_history_screen.dart';
 import 'ai_insight_screen.dart';
 import 'stok_management_screen.dart';
 import 'master_data_screen.dart';
 import '../widgets/admin_drawer.dart';
+import 'report_menu_screen.dart';
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({super.key});
@@ -142,23 +143,28 @@ class _LaporanScreenState extends State<LaporanScreen> {
               MaterialPageRoute(builder: (context) => const HistoryScreen()),
             );
           } else if (index == 2) {
-            // Already on laporan
+            // Already on Laporan Pengeluaran
           } else if (index == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
-            );
-          } else if (index == 4) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => const StokManagementScreen(),
               ),
             );
-          } else if (index == 5) {
+          } else if (index == 4) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MasterDataScreen()),
+            );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ReportMenuScreen()),
+            );
+          } else if (index == 6) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
             );
           }
         },

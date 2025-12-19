@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/insight_models.dart';
 import 'admin_screen.dart';
-import 'admin&kasir/history_screen.dart';
-import 'lihat_laporan_screen.dart';
+import 'admin&kasir/admin_history_screen.dart';
+import 'laporan_pengeluaran_screen.dart';
 import 'stok_management_screen.dart';
 import 'master_data_screen.dart';
+import 'report_menu_screen.dart';
 import '../widgets/admin_drawer.dart';
 
 class AiInsightScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _AiInsightScreenState extends State<AiInsightScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  int selectedDrawerIndex = 3; // AI Insight is active
+  int selectedDrawerIndex = 6; // AI Insight is active
 
   // Data states
   List<PenjualanInsight> penjualanData = [];
@@ -263,19 +264,24 @@ class _AiInsightScreenState extends State<AiInsightScreen>
               MaterialPageRoute(builder: (context) => const LaporanScreen()),
             );
           } else if (index == 3) {
-            // Already on ai insight
-          } else if (index == 4) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(
                 builder: (context) => const StokManagementScreen(),
               ),
             );
-          } else if (index == 5) {
+          } else if (index == 4) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MasterDataScreen()),
             );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ReportMenuScreen()),
+            );
+          } else if (index == 6) {
+            // Already on AI Insight
           }
         },
       ),

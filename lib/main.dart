@@ -8,7 +8,7 @@ import 'screens/admin/RegisterScreen.dart';
 import 'screens/kasir/payment_screen.dart';
 import 'screens/kasir/order_detail_screen.dart';
 import 'screens/kasir/tambah_pengeluaran_screen.dart';
-import 'screens/lihat_laporan_screen.dart';
+import 'screens/laporan_pengeluaran_screen.dart';
 import 'screens/ai_insight_screen.dart';
 import 'screens/stok_management_screen.dart';
 import 'screens/master_data_screen.dart';

@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../../widgets/kasir_drawer.dart';
 import 'kasir_screen.dart';
-import '../admin&kasir/history_screen.dart';
+import '../admin&kasir/admin_history_screen.dart';
 
 class PengeluaranScreen extends StatefulWidget {
   const PengeluaranScreen({super.key});

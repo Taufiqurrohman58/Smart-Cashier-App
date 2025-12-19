@@ -4,10 +4,11 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/stok_models.dart';
 import 'admin_screen.dart';
-import 'admin&kasir/history_screen.dart';
-import 'lihat_laporan_screen.dart';
+import 'admin&kasir/admin_history_screen.dart';
+import 'laporan_pengeluaran_screen.dart';
 import 'ai_insight_screen.dart';
 import 'master_data_screen.dart';
+import 'report_menu_screen.dart';
 import '../widgets/admin_drawer.dart';
 
 class StokManagementScreen extends StatefulWidget {
@@ -21,7 +22,7 @@ class _StokManagementScreenState extends State<StokManagementScreen>
     with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
-  int selectedDrawerIndex = 4; // Kelola Stok is active
+  int selectedDrawerIndex = 3; // Kelola Stok is active
 
   // Transfer Stok Form
   final TextEditingController _productGudangIdController =
@@ -243,16 +244,21 @@ class _StokManagementScreenState extends State<StokManagementScreen>
               MaterialPageRoute(builder: (context) => const LaporanScreen()),
             );
           } else if (index == 3) {
-            Navigator.pushReplacement(
-              context,
-              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
-            );
+            // Already on Stok Management
           } else if (index == 4) {
-            // Already on stok management
-          } else if (index == 5) {
             Navigator.pushReplacement(
               context,
               MaterialPageRoute(builder: (context) => const MasterDataScreen()),
+            );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ReportMenuScreen()),
+            );
+          } else if (index == 6) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
             );
           }
         },

@@ -4,10 +4,11 @@ import 'admin/add_user_kasir_screen.dart';
 import 'admin/add_category_screen.dart';
 import 'produk_gudang_screen.dart';
 import 'admin_screen.dart';
-import 'admin&kasir/history_screen.dart';
-import 'lihat_laporan_screen.dart';
+import 'admin&kasir/admin_history_screen.dart';
+import 'laporan_pengeluaran_screen.dart';
 import 'ai_insight_screen.dart';
 import 'stok_management_screen.dart';
+import 'report_menu_screen.dart';
 import '../widgets/admin_drawer.dart';
 
 class MasterDataScreen extends StatefulWidget {
@@ -18,7 +19,7 @@ class MasterDataScreen extends StatefulWidget {
 }
 
 class _MasterDataScreenState extends State<MasterDataScreen> {
-  int selectedDrawerIndex = 5; // Master Data is active
+  int selectedDrawerIndex = 4; // Master Data is active
 
   String userName = '';
   String userRole = '';
@@ -68,17 +69,22 @@ class _MasterDataScreenState extends State<MasterDataScreen> {
           } else if (index == 3) {
             Navigator.pushReplacement(
               context,
-              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
-            );
-          } else if (index == 4) {
-            Navigator.pushReplacement(
-              context,
               MaterialPageRoute(
                 builder: (context) => const StokManagementScreen(),
               ),
             );
+          } else if (index == 4) {
+            // Already on Master Data
           } else if (index == 5) {
-            // Already on master data
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const ReportMenuScreen()),
+            );
+          } else if (index == 6) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+            );
           }
         },
       ),

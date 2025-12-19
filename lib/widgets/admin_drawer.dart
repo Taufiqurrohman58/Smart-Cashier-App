@@ -60,10 +60,10 @@ class AdminDrawer extends StatelessWidget {
 
           _drawerItem(icon: Icons.home, title: "Beranda", index: 0),
           _drawerItem(icon: Icons.history, title: "History", index: 1),
-          _drawerItem(icon: Icons.bar_chart, title: "Laporan", index: 2),
-          _drawerItem(icon: Icons.insights, title: "AI Insight", index: 3),
-          _drawerItem(icon: Icons.inventory, title: "Kelola Stok", index: 4),
-          _drawerItem(icon: Icons.data_object, title: "Master Data", index: 5),
+          _drawerItem(icon: Icons.money_off, title: "Laporan", index: 2),
+          _drawerItem(icon: Icons.inventory, title: "Kelola Stok", index: 3),
+          _drawerItem(icon: Icons.data_object, title: "Master Data", index: 4),
+          _drawerItem(icon: Icons.insights, title: "AI Insight", index: 6),
         ],
       ),
     );
