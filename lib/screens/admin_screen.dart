@@ -5,7 +5,7 @@ import 'dart:convert';
 import '../models/product.dart';
 import '../widgets/admin_drawer.dart';
 import '../widgets/category_menu.dart';
-import 'history_screen.dart';
+import 'admin&kasir/history_screen.dart';
 import 'lihat_laporan_screen.dart';
 import 'ai_insight_screen.dart';
 import 'stok_management_screen.dart';

@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import '../models/transaction_history.dart';
+import '../../models/transaction_history.dart';
 
 class HistoryDetailScreen extends StatelessWidget {
   final TransactionHistory transaction;

@@ -3,6 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/stok_models.dart';
+import 'admin_screen.dart';
+import 'admin&kasir/history_screen.dart';
+import 'lihat_laporan_screen.dart';
+import 'ai_insight_screen.dart';
+import 'master_data_screen.dart';
+import '../widgets/admin_drawer.dart';
 
 class StokManagementScreen extends StatefulWidget {
   const StokManagementScreen({super.key});
@@ -11,16 +17,23 @@ class StokManagementScreen extends StatefulWidget {
   State<StokManagementScreen> createState() => _StokManagementScreenState();
 }
 
-class _StokManagementScreenState extends State<StokManagementScreen> with SingleTickerProviderStateMixin {
+class _StokManagementScreenState extends State<StokManagementScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
 
+  int selectedDrawerIndex = 4; // Kelola Stok is active
+
   // Transfer Stok Form
-  final TextEditingController _productGudangIdController = TextEditingController();
-  final TextEditingController _transferQuantityController = TextEditingController();
+  final TextEditingController _productGudangIdController =
+      TextEditingController();
+  final TextEditingController _transferQuantityController =
+      TextEditingController();
 
   // Gudang Stok Form
-  final TextEditingController _gudangProductIdController = TextEditingController();
-  final TextEditingController _gudangQuantityController = TextEditingController();
+  final TextEditingController _gudangProductIdController =
+      TextEditingController();
+  final TextEditingController _gudangQuantityController =
+      TextEditingController();
 
   bool _isTransferLoading = false;
   bool _isGudangLoading = false;
@@ -59,7 +72,8 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
   }
 
   Future<void> _transferStok() async {
-    if (_productGudangIdController.text.isEmpty || _transferQuantityController.text.isEmpty) {
+    if (_productGudangIdController.text.isEmpty ||
+        _transferQuantityController.text.isEmpty) {
       setState(() {
         _transferError = 'Product ID dan quantity harus diisi';
       });
@@ -131,7 +145,8 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
   }
 
   Future<void> _tambahStokGudang() async {
-    if (_gudangProductIdController.text.isEmpty || _gudangQuantityController.text.isEmpty) {
+    if (_gudangProductIdController.text.isEmpty ||
+        _gudangQuantityController.text.isEmpty) {
       setState(() {
         _gudangError = 'Product ID dan quantity harus diisi';
       });
@@ -172,10 +187,7 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
           'Content-Type': 'application/json',
           'Authorization': 'Token $token',
         },
-        body: json.encode({
-          "product_id": productId,
-          "quantity": quantity,
-        }),
+        body: json.encode({"product_id": productId, "quantity": quantity}),
       );
 
       if (response.statusCode == 200 || response.statusCode == 201) {
@@ -206,17 +218,60 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
+      drawer: AdminDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporanScreen()),
+            );
+          } else if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+            );
+          } else if (index == 4) {
+            // Already on stok management
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MasterDataScreen()),
+            );
+          }
+        },
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          "Kelola Stok",
-          style: TextStyle(color: Colors.white),
+        automaticallyImplyLeading: false,
+        title: Builder(
+          builder: (context) => Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+              const Text("Kelola Stok", style: TextStyle(color: Colors.white)),
+            ],
+          ),
         ),
         centerTitle: true,
         bottom: TabBar(
@@ -232,10 +287,7 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildTransferTab(),
-          _buildGudangTab(),
-        ],
+        children: [_buildTransferTab(), _buildGudangTab()],
       ),
     );
   }
@@ -248,18 +300,12 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
         children: [
           const Text(
             "Transfer Stok ke Kantin",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
             "Transfer stok dari gudang ke kantin",
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey, fontSize: 16),
           ),
           const SizedBox(height: 32),
 
@@ -363,18 +409,12 @@ class _StokManagementScreenState extends State<StokManagementScreen> with Single
         children: [
           const Text(
             "Tambah Stok Gudang",
-            style: TextStyle(
-              fontSize: 24,
-              fontWeight: FontWeight.bold,
-            ),
+            style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
           ),
           const SizedBox(height: 8),
           const Text(
             "Menambah stok produk di gudang",
-            style: TextStyle(
-              color: Colors.grey,
-              fontSize: 16,
-            ),
+            style: TextStyle(color: Colors.grey, fontSize: 16),
           ),
           const SizedBox(height: 32),
 

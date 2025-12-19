@@ -4,6 +4,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
 import 'dart:convert';
 import '../models/pengeluaran.dart';
+import 'admin_screen.dart';
+import 'admin&kasir/history_screen.dart';
+import 'ai_insight_screen.dart';
+import 'stok_management_screen.dart';
+import 'master_data_screen.dart';
+import '../widgets/admin_drawer.dart';
 
 class LaporanScreen extends StatefulWidget {
   const LaporanScreen({super.key});
@@ -13,6 +19,8 @@ class LaporanScreen extends StatefulWidget {
 }
 
 class _LaporanScreenState extends State<LaporanScreen> {
+  int selectedDrawerIndex = 2; // Laporan is active
+
   List<Pengeluaran> pengeluaranList = [];
   bool isLoading = true;
   String errorMessage = '';
@@ -55,7 +63,8 @@ class _LaporanScreenState extends State<LaporanScreen> {
         return;
       }
 
-      String url = 'https://flutter001.pythonanywhere.com/api/pengeluaran/list/';
+      String url =
+          'https://flutter001.pythonanywhere.com/api/pengeluaran/list/';
       if (selectedDate != null) {
         url += '?date=${dateFormat.format(selectedDate!)}';
       }
@@ -113,17 +122,66 @@ class _LaporanScreenState extends State<LaporanScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
+      drawer: AdminDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          } else if (index == 2) {
+            // Already on laporan
+          } else if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+            );
+          } else if (index == 4) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StokManagementScreen(),
+              ),
+            );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MasterDataScreen()),
+            );
+          }
+        },
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          "Laporan Pengeluaran",
-          style: TextStyle(color: Colors.white),
+        automaticallyImplyLeading: false,
+        titleSpacing: 0,
+        title: Builder(
+          builder: (context) => Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+              const Text(
+                "Laporan Pengeluaran",
+                style: TextStyle(color: Colors.white),
+              ),
+            ],
+          ),
         ),
         centerTitle: true,
         actions: [

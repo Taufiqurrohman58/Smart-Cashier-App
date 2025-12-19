@@ -3,6 +3,12 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
 import '../models/insight_models.dart';
+import 'admin_screen.dart';
+import 'admin&kasir/history_screen.dart';
+import 'lihat_laporan_screen.dart';
+import 'stok_management_screen.dart';
+import 'master_data_screen.dart';
+import '../widgets/admin_drawer.dart';
 
 class AiInsightScreen extends StatefulWidget {
   const AiInsightScreen({super.key});
@@ -11,8 +17,11 @@ class AiInsightScreen extends StatefulWidget {
   State<AiInsightScreen> createState() => _AiInsightScreenState();
 }
 
-class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProviderStateMixin {
+class _AiInsightScreenState extends State<AiInsightScreen>
+    with SingleTickerProviderStateMixin {
   late TabController _tabController;
+
+  int selectedDrawerIndex = 3; // AI Insight is active
 
   // Data states
   List<PenjualanInsight> penjualanData = [];
@@ -229,17 +238,62 @@ class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProv
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
+      drawer: AdminDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporanScreen()),
+            );
+          } else if (index == 3) {
+            // Already on ai insight
+          } else if (index == 4) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StokManagementScreen(),
+              ),
+            );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MasterDataScreen()),
+            );
+          }
+        },
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
-          onPressed: () {
-            Navigator.pop(context);
-          },
-        ),
-        title: const Text(
-          "AI Insight",
-          style: TextStyle(color: Colors.white),
+        automaticallyImplyLeading: false,
+        title: Builder(
+          builder: (context) => Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+              const Text("AI Insight", style: TextStyle(color: Colors.white)),
+            ],
+          ),
         ),
         centerTitle: true,
         bottom: TabBar(
@@ -256,11 +310,7 @@ class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProv
       ),
       body: TabBarView(
         controller: _tabController,
-        children: [
-          _buildPenjualanTab(),
-          _buildStokTab(),
-          _buildPrediksiTab(),
-        ],
+        children: [_buildPenjualanTab(), _buildStokTab(), _buildPrediksiTab()],
       ),
     );
   }
@@ -286,7 +336,8 @@ class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProv
         return _insightCard(
           title: item.produk,
           subtitle: 'Total Terjual: ${item.totalTerjual}',
-          value: 'Rp${item.totalPendapatan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
+          value:
+              'Rp${item.totalPendapatan.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}',
           icon: Icons.trending_up,
           color: Colors.green,
         );
@@ -314,7 +365,8 @@ class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProv
         final item = stokRekomendasiData[index];
         return _insightCard(
           title: item.produk,
-          subtitle: 'Stok Sekarang: ${item.stokSekarang} → Saran: ${item.saranStok}',
+          subtitle:
+              'Stok Sekarang: ${item.stokSekarang} → Saran: ${item.saranStok}',
           value: item.alasan,
           icon: Icons.inventory,
           color: Colors.blue,
@@ -343,7 +395,8 @@ class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProv
         final item = prediksiHabisData[index];
         return _insightCard(
           title: item.produk,
-          subtitle: 'Stok: ${item.stokSekarang} | Estimasi: ${item.estimasiHabisHari} hari',
+          subtitle:
+              'Stok: ${item.stokSekarang} | Estimasi: ${item.estimasiHabisHari} hari',
           value: item.status,
           icon: Icons.warning,
           color: item.status == 'Segera Habis' ? Colors.red : Colors.orange,
@@ -399,10 +452,7 @@ class _AiInsightScreenState extends State<AiInsightScreen> with SingleTickerProv
                 const SizedBox(height: 4),
                 Text(
                   subtitle,
-                  style: const TextStyle(
-                    color: Colors.grey,
-                    fontSize: 14,
-                  ),
+                  style: const TextStyle(color: Colors.grey, fontSize: 14),
                 ),
                 const SizedBox(height: 4),
                 Text(

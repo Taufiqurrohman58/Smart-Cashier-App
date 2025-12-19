@@ -1,24 +1,103 @@
 import 'package:flutter/material.dart';
-import 'add_user_kasir_screen.dart';
-import 'add_category_screen.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'admin/add_user_kasir_screen.dart';
+import 'admin/add_category_screen.dart';
 import 'produk_gudang_screen.dart';
+import 'admin_screen.dart';
+import 'admin&kasir/history_screen.dart';
+import 'lihat_laporan_screen.dart';
+import 'ai_insight_screen.dart';
+import 'stok_management_screen.dart';
+import '../widgets/admin_drawer.dart';
 
-class MasterDataScreen extends StatelessWidget {
+class MasterDataScreen extends StatefulWidget {
   const MasterDataScreen({super.key});
+
+  @override
+  State<MasterDataScreen> createState() => _MasterDataScreenState();
+}
+
+class _MasterDataScreenState extends State<MasterDataScreen> {
+  int selectedDrawerIndex = 5; // Master Data is active
+
+  String userName = '';
+  String userRole = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _loadUserData();
+  }
+
+  Future<void> _loadUserData() async {
+    final prefs = await SharedPreferences.getInstance();
+    setState(() {
+      userName = prefs.getString('user_name') ?? 'User';
+      userRole = prefs.getString('user_role') ?? 'Role';
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
+      drawer: AdminDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
+            );
+          } else if (index == 1) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const HistoryScreen()),
+            );
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporanScreen()),
+            );
+          } else if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+            );
+          } else if (index == 4) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StokManagementScreen(),
+              ),
+            );
+          } else if (index == 5) {
+            // Already on master data
+          }
+        },
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
-        leading: IconButton(
-          icon: const Icon(Icons.arrow_back_ios, color: Colors.white, size: 18),
-          onPressed: () {
-            Navigator.pop(context);
-          },
+        automaticallyImplyLeading: false,
+        title: Builder(
+          builder: (context) => Row(
+            children: [
+              IconButton(
+                icon: const Icon(Icons.menu, color: Colors.white),
+                onPressed: () {
+                  Scaffold.of(context).openDrawer();
+                },
+              ),
+              const Text("Master Data", style: TextStyle(color: Colors.white)),
+            ],
+          ),
         ),
-        title: const Text("Master Data", style: TextStyle(color: Colors.white)),
         centerTitle: true,
       ),
       body: SafeArea(

@@ -1,11 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:smart_cashier/screens/kasir_screen.dart';
 import 'dart:convert';
-import '../models/transaction_history.dart';
-import 'tambah_pengeluaran_screen.dart';
+import '../../models/transaction_history.dart';
+import '../kasir/tambah_pengeluaran_screen.dart';
 import 'history_detail_screen.dart';
+import '../admin_screen.dart';
+import '../lihat_laporan_screen.dart';
+import '../ai_insight_screen.dart';
+import '../stok_management_screen.dart';
+import '../master_data_screen.dart';
+import '../../widgets/admin_drawer.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -85,7 +90,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: const Color(0xFFF3F3F3),
-      drawer: _buildDrawer(),
+      drawer: AdminDrawer(
+        userName: userName,
+        userRole: userRole,
+        selectedIndex: selectedDrawerIndex,
+        onIndexChanged: (index) {
+          setState(() {
+            selectedDrawerIndex = index;
+          });
+          Navigator.pop(context);
+          if (index == 0) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AdminScreen()),
+            );
+          } else if (index == 1) {
+            // Already on history
+          } else if (index == 2) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const LaporanScreen()),
+            );
+          } else if (index == 3) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const AiInsightScreen()),
+            );
+          } else if (index == 4) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(
+                builder: (context) => const StokManagementScreen(),
+              ),
+            );
+          } else if (index == 5) {
+            Navigator.pushReplacement(
+              context,
+              MaterialPageRoute(builder: (context) => const MasterDataScreen()),
+            );
+          }
+        },
+      ),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1D1D1F),
         elevation: 0,
@@ -126,108 +171,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return _transactionCard(transaction);
               },
             ),
-    );
-  }
-
-  Widget _buildDrawer() {
-    return Drawer(
-      child: Column(
-        children: [
-          Container(
-            width: double.infinity,
-            padding: const EdgeInsets.all(20),
-            color: Colors.teal,
-            child: Row(
-              children: [
-                const SizedBox(width: 12),
-                Container(
-                  width: 45,
-                  height: 45,
-                  decoration: BoxDecoration(
-                    color: Colors.white,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: const Icon(Icons.person, size: 39),
-                ),
-                const SizedBox(width: 6),
-                Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      userName,
-                      style: const TextStyle(
-                        fontWeight: FontWeight.bold,
-                        fontSize: 16,
-                        color: Colors.white,
-                      ),
-                    ),
-                    const SizedBox(height: 1),
-                    Text(
-                      userRole,
-                      style: const TextStyle(color: Colors.white70),
-                    ),
-                  ],
-                ),
-              ],
-            ),
-          ),
-
-          _drawerItem(icon: Icons.home, title: "Beranda", index: 0),
-          _drawerItem(icon: Icons.history, title: "History", index: 1),
-          _drawerItem(icon: Icons.bar_chart, title: "Pengeluaran", index: 2),
-        ],
-      ),
-    );
-  }
-
-  Widget _drawerItem({
-    required IconData icon,
-    required String title,
-    required int index,
-  }) {
-    bool active = selectedDrawerIndex == index;
-
-    return InkWell(
-      onTap: () {
-        setState(() {
-          selectedDrawerIndex = index;
-        });
-        Navigator.pop(context);
-        if (index == 0) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const KasirScreen()),
-          );
-        } else if (index == 2) {
-          Navigator.pushReplacement(
-            context,
-            MaterialPageRoute(builder: (context) => const PengeluaranScreen()),
-          );
-        }
-      },
-      child: Container(
-        margin: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-        padding: const EdgeInsets.all(12),
-        decoration: BoxDecoration(
-          color: active ? Colors.teal.withOpacity(0.1) : Colors.transparent,
-          borderRadius: BorderRadius.circular(12),
-          border: active ? Border.all(color: Colors.teal, width: 2) : null,
-        ),
-        child: Row(
-          children: [
-            Icon(icon, color: active ? Colors.teal : Colors.grey),
-            const SizedBox(width: 16),
-            Text(
-              title,
-              style: TextStyle(
-                color: active ? Colors.teal : Colors.black,
-                fontWeight: active ? FontWeight.bold : FontWeight.normal,
-                fontSize: 16,
-              ),
-            ),
-          ],
-        ),
-      ),
     );
   }
 

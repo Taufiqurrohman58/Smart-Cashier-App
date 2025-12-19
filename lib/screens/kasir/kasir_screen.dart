@@ -2,12 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'dart:convert';
-import '../models/product.dart';
-import '../models/cart_item.dart';
-import '../models/category.dart';
-import '../widgets/kasir_drawer.dart';
-import '../widgets/category_menu.dart';
-import 'history_screen.dart';
+import '../../models/product.dart';
+import '../../models/cart_item.dart';
+import '../../models/category.dart';
+import '../../widgets/kasir_drawer.dart';
+import '../../widgets/category_menu.dart';
+import '../admin&kasir/history_screen.dart';
 import 'tambah_pengeluaran_screen.dart';
 
 class KasirScreen extends StatefulWidget {
