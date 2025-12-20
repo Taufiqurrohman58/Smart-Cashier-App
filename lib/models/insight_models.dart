@@ -1,7 +1,7 @@
 class PenjualanInsight {
   final String produk;
   final int totalTerjual;
-  final int totalPendapatan;
+  final double totalPendapatan;
 
   PenjualanInsight({
     required this.produk,
@@ -13,7 +13,7 @@ class PenjualanInsight {
     return PenjualanInsight(
       produk: json['produk'],
       totalTerjual: json['total_terjual'],
-      totalPendapatan: json['total_pendapatan'],
+      totalPendapatan: json['total_pendapatan'].toDouble(),
     );
   }
 }

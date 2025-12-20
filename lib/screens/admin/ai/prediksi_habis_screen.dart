@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../../widgets/admin_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../../../models/insight_models.dart';
 import '../../admin_screen.dart';
 import '../admin_history_screen.dart';
 import '../laporan/laporan_pengeluaran_screen.dart';
@@ -27,11 +30,15 @@ class _PrediksiHabisScreenState extends State<PrediksiHabisScreen> {
   int selectedDrawerIndex = 19; // Prediksi Habis
   String userName = '';
   String userRole = '';
+  List<PrediksiHabis> _prediksiData = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _fetchPrediksiData();
   }
 
   Future<void> _loadUserData() async {
@@ -40,6 +47,61 @@ class _PrediksiHabisScreenState extends State<PrediksiHabisScreen> {
       userName = prefs.getString('user_name') ?? 'User';
       userRole = prefs.getString('user_role') ?? 'Role';
     });
+  }
+
+  Future<void> _fetchPrediksiData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        setState(() {
+          _errorMessage = 'Token tidak ditemukan';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse(
+          'https://flutter001.pythonanywhere.com/api/ai/prediksi-habis/',
+        ),
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['status'] == true) {
+          final List<dynamic> prediksiData = data['prediksi'];
+          setState(() {
+            _prediksiData = prediksiData
+                .map((json) => PrediksiHabis.fromJson(json))
+                .toList();
+          });
+        } else {
+          setState(() {
+            _errorMessage = 'Gagal memuat data prediksi habis';
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Error: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -181,9 +243,59 @@ class _PrediksiHabisScreenState extends State<PrediksiHabisScreen> {
           ),
         ),
       ),
-      body: const Center(
-        child: Text("Prediksi Habis Screen", style: TextStyle(fontSize: 24)),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage.isNotEmpty
+          ? Center(
+              child: Text(
+                _errorMessage,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            )
+          : _prediksiData.isEmpty
+          ? const Center(
+              child: Text(
+                'Tidak ada data prediksi habis',
+                style: TextStyle(fontSize: 16),
+              ),
+            )
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text('No')),
+                  DataColumn(label: Text('Produk')),
+                  DataColumn(label: Text('Stok Sekarang')),
+                  DataColumn(label: Text('Estimasi Habis (Hari)')),
+                  DataColumn(label: Text('Status')),
+                ],
+                rows: _prediksiData.asMap().entries.map((entry) {
+                  int index = entry.key + 1;
+                  PrediksiHabis prediksi = entry.value;
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(index.toString())),
+                      DataCell(Text(prediksi.produk)),
+                      DataCell(Text(prediksi.stokSekarang.toString())),
+                      DataCell(Text(prediksi.estimasiHabisHari.toString())),
+                      DataCell(
+                        Text(
+                          prediksi.status,
+                          style: TextStyle(
+                            color: prediksi.status == 'Segera Habis'
+                                ? Colors.red
+                                : prediksi.status == 'Tidak Ada Penjualan'
+                                ? Colors.orange
+                                : Colors.green,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
     );
   }
 }

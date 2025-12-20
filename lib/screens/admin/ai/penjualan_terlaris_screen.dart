@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
 import '../../../widgets/admin_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'dart:convert';
+import '../../../models/insight_models.dart';
 import '../../admin_screen.dart';
 import '../admin_history_screen.dart';
 import '../laporan/laporan_pengeluaran_screen.dart';
@@ -28,11 +31,15 @@ class _PenjualanTerlarisScreenState extends State<PenjualanTerlarisScreen> {
   int selectedDrawerIndex = 17; // Penjualan Terlaris
   String userName = '';
   String userRole = '';
+  List<PenjualanInsight> _penjualanData = [];
+  bool _isLoading = true;
+  String _errorMessage = '';
 
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _fetchPenjualanData();
   }
 
   Future<void> _loadUserData() async {
@@ -41,6 +48,61 @@ class _PenjualanTerlarisScreenState extends State<PenjualanTerlarisScreen> {
       userName = prefs.getString('user_name') ?? 'User';
       userRole = prefs.getString('user_role') ?? 'Role';
     });
+  }
+
+  Future<void> _fetchPenjualanData() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+    });
+
+    try {
+      final prefs = await SharedPreferences.getInstance();
+      final token = prefs.getString('auth_token');
+
+      if (token == null) {
+        setState(() {
+          _errorMessage = 'Token tidak ditemukan';
+          _isLoading = false;
+        });
+        return;
+      }
+
+      final response = await http.get(
+        Uri.parse(
+          'https://flutter001.pythonanywhere.com/api/ai/insight-penjualan/',
+        ),
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 200) {
+        final Map<String, dynamic> data = json.decode(response.body);
+        if (data['status'] == true) {
+          final List<dynamic> insightData = data['insight'];
+          setState(() {
+            _penjualanData = insightData
+                .map((json) => PenjualanInsight.fromJson(json))
+                .toList();
+          });
+        } else {
+          setState(() {
+            _errorMessage = 'Gagal memuat data penjualan';
+          });
+        }
+      } else {
+        setState(() {
+          _errorMessage = 'Error: ${response.statusCode}';
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _errorMessage = 'Error: $e';
+      });
+    } finally {
+      setState(() {
+        _isLoading = false;
+      });
+    }
   }
 
   @override
@@ -182,12 +244,49 @@ class _PenjualanTerlarisScreenState extends State<PenjualanTerlarisScreen> {
           ),
         ),
       ),
-      body: const Center(
-        child: Text(
-          "Penjualan Terlaris Screen",
-          style: TextStyle(fontSize: 24),
-        ),
-      ),
+      body: _isLoading
+          ? const Center(child: CircularProgressIndicator())
+          : _errorMessage.isNotEmpty
+          ? Center(
+              child: Text(
+                _errorMessage,
+                style: const TextStyle(color: Colors.red, fontSize: 16),
+              ),
+            )
+          : _penjualanData.isEmpty
+          ? const Center(
+              child: Text(
+                'Tidak ada data penjualan terlaris',
+                style: TextStyle(fontSize: 16),
+              ),
+            )
+          : SingleChildScrollView(
+              scrollDirection: Axis.horizontal,
+              child: DataTable(
+                columns: const [
+                  DataColumn(label: Text('No')),
+                  DataColumn(label: Text('Produk')),
+                  DataColumn(label: Text('Total Terjual')),
+                  DataColumn(label: Text('Total Pendapatan')),
+                ],
+                rows: _penjualanData.asMap().entries.map((entry) {
+                  int index = entry.key + 1;
+                  PenjualanInsight insight = entry.value;
+                  return DataRow(
+                    cells: [
+                      DataCell(Text(index.toString())),
+                      DataCell(Text(insight.produk)),
+                      DataCell(Text(insight.totalTerjual.toString())),
+                      DataCell(
+                        Text(
+                          'Rp ${insight.totalPendapatan.toStringAsFixed(2)}',
+                        ),
+                      ),
+                    ],
+                  );
+                }).toList(),
+              ),
+            ),
     );
   }
 }
