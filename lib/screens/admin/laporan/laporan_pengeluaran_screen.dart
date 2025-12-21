@@ -1,9 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:intl/intl.dart';
-import 'dart:convert';
-import '../../../models/pengeluaran.dart';
+import '../../../models/laporan_pengeluaran.dart';
+import '../../../services/api_service.dart';
 import '../../admin_screen.dart';
 import '../admin_history_screen.dart';
 import '../../../widgets/admin_drawer.dart';
@@ -30,18 +29,20 @@ class LaporanScreen extends StatefulWidget {
 class _LaporanScreenState extends State<LaporanScreen> {
   int selectedDrawerIndex = 2; // Laporan is active
 
-  List<Pengeluaran> pengeluaranList = [];
+  List<DetailPengeluaran> pengeluaranList = [];
   bool isLoading = true;
   String errorMessage = '';
   String userName = '';
   String userRole = '';
+  int totalPengeluaran = 0;
 
-  DateTime? selectedDate;
+  late DateTime selectedDate;
   final DateFormat dateFormat = DateFormat('yyyy-MM-dd');
 
   @override
   void initState() {
     super.initState();
+    selectedDate = DateTime.now();
     _loadUserData();
     _fetchPengeluaran();
   }
@@ -61,48 +62,18 @@ class _LaporanScreenState extends State<LaporanScreen> {
     });
 
     try {
-      final prefs = await SharedPreferences.getInstance();
-      final token = prefs.getString('auth_token');
+      final apiService = ApiService();
+      final laporan = await apiService.fetchPengeluaranReport(selectedDate);
 
-      if (token == null) {
-        setState(() {
-          errorMessage = 'Token tidak ditemukan';
-          isLoading = false;
-        });
-        return;
-      }
-
-      String url =
-          'https://flutter001.pythonanywhere.com/api/pengeluaran/list/';
-      if (selectedDate != null) {
-        url += '?date=${dateFormat.format(selectedDate!)}';
-      }
-
-      final response = await http.get(
-        Uri.parse(url),
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': 'Token $token',
-        },
-      );
-
-      if (response.statusCode == 200) {
-        final List<dynamic> data = json.decode(response.body);
-        setState(() {
-          pengeluaranList = data
-              .map((json) => Pengeluaran.fromJson(json))
-              .toList();
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          errorMessage = 'Gagal memuat data (${response.statusCode})';
-          isLoading = false;
-        });
-      }
-    } catch (e) {
       setState(() {
-        errorMessage = 'Error: $e';
+        pengeluaranList = laporan.detail;
+        totalPengeluaran = laporan.totalPengeluaran;
+        isLoading = false;
+      });
+    } catch (e) {
+      print('Error in _fetchPengeluaran: $e');
+      setState(() {
+        errorMessage = e.toString();
         isLoading = false;
       });
     }
@@ -111,7 +82,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
   Future<void> _selectDate(BuildContext context) async {
     final DateTime? picked = await showDatePicker(
       context: context,
-      initialDate: selectedDate ?? DateTime.now(),
+      initialDate: selectedDate,
       firstDate: DateTime(2020),
       lastDate: DateTime.now(),
     );
@@ -121,10 +92,6 @@ class _LaporanScreenState extends State<LaporanScreen> {
       });
       _fetchPengeluaran();
     }
-  }
-
-  int get totalPengeluaran {
-    return pengeluaranList.fold(0, (sum, item) => sum + item.jumlah);
   }
 
   @override
@@ -285,22 +252,10 @@ class _LaporanScreenState extends State<LaporanScreen> {
                     TextButton(
                       onPressed: () => _selectDate(context),
                       child: Text(
-                        selectedDate != null
-                            ? dateFormat.format(selectedDate!)
-                            : "Semua Tanggal",
+                        dateFormat.format(selectedDate),
                         style: const TextStyle(color: Colors.teal),
                       ),
                     ),
-                    if (selectedDate != null)
-                      IconButton(
-                        icon: const Icon(Icons.clear, size: 20),
-                        onPressed: () {
-                          setState(() {
-                            selectedDate = null;
-                          });
-                          _fetchPengeluaran();
-                        },
-                      ),
                   ],
                 ),
                 const Divider(),
@@ -351,7 +306,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
     );
   }
 
-  Widget _pengeluaranCard(Pengeluaran pengeluaran) {
+  Widget _pengeluaranCard(DetailPengeluaran pengeluaran) {
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.all(16),
@@ -360,7 +315,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.grey.withOpacity(0.1),
+            color: Colors.grey.withValues(alpha: 25.5),
             spreadRadius: 1,
             blurRadius: 3,
             offset: const Offset(0, 1),
@@ -381,7 +336,7 @@ class _LaporanScreenState extends State<LaporanScreen> {
                 ),
               ),
               Text(
-                "Rp${pengeluaran.jumlah.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
+                "Rp${pengeluaran.jumlah.toInt().toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]},')}",
                 style: const TextStyle(
                   fontSize: 16,
                   fontWeight: FontWeight.bold,
@@ -391,18 +346,9 @@ class _LaporanScreenState extends State<LaporanScreen> {
             ],
           ),
           const SizedBox(height: 8),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(
-                "Kasir: ${pengeluaran.kasir}",
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-              Text(
-                pengeluaran.tanggal,
-                style: const TextStyle(color: Colors.grey, fontSize: 14),
-              ),
-            ],
+          Text(
+            "Kasir: ${pengeluaran.kasir}",
+            style: const TextStyle(color: Colors.grey, fontSize: 14),
           ),
         ],
       ),
