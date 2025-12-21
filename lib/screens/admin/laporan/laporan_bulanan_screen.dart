@@ -15,6 +15,8 @@ import 'laporan_pengeluaran_screen.dart';
 import 'laporan_harian_screen.dart';
 import 'laporan_tahunan_screen.dart';
 import 'export_laporan_screen.dart';
+import '../../../services/api_service.dart';
+import '../../../models/laporan_bulanan.dart';
 
 class LaporanBulananScreen extends StatefulWidget {
   const LaporanBulananScreen({super.key});
@@ -28,10 +30,38 @@ class _LaporanBulananScreenState extends State<LaporanBulananScreen> {
   String userName = '';
   String userRole = '';
 
+  // Month and Year selection
+  int selectedMonth = DateTime.now().month;
+  int selectedYear = DateTime.now().year;
+
+  // Data and state management
+  LaporanBulananResponse? laporanData;
+  bool isLoading = false;
+  String errorMessage = '';
+
+  final ApiService _apiService = ApiService();
+
+  // Month names in Indonesian
+  final List<String> monthNames = [
+    'Januari',
+    'Februari',
+    'Maret',
+    'April',
+    'Mei',
+    'Juni',
+    'Juli',
+    'Agustus',
+    'September',
+    'Oktober',
+    'November',
+    'Desember',
+  ];
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _fetchLaporanData();
   }
 
   Future<void> _loadUserData() async {
@@ -40,6 +70,34 @@ class _LaporanBulananScreenState extends State<LaporanBulananScreen> {
       userName = prefs.getString('user_name') ?? 'User';
       userRole = prefs.getString('user_role') ?? 'Role';
     });
+  }
+
+  Future<void> _fetchLaporanData() async {
+    setState(() {
+      isLoading = true;
+      errorMessage = '';
+    });
+
+    try {
+      final data = await _apiService.fetchLaporanBulanan(
+        selectedMonth,
+        selectedYear,
+      );
+      setState(() {
+        laporanData = data;
+        isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        errorMessage = e.toString();
+        isLoading = false;
+        laporanData = null;
+      });
+    }
+  }
+
+  String formatCurrency(int amount) {
+    return 'Rp ${amount.toString().replaceAllMapped(RegExp(r'(\d{1,3})(?=(\d{3})+(?!\d))'), (Match m) => '${m[1]}.')}';
   }
 
   @override
@@ -179,8 +237,495 @@ class _LaporanBulananScreenState extends State<LaporanBulananScreen> {
           ),
         ),
       ),
-      body: const Center(
-        child: Text("Laporan Bulanan Screen", style: TextStyle(fontSize: 24)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Month and Year Selection
+            _buildMonthYearSelector(),
+            const SizedBox(height: 20),
+
+            // Loading State
+            if (isLoading) ...[
+              const Center(child: CircularProgressIndicator()),
+              const SizedBox(height: 20),
+            ],
+
+            // Error State
+            if (errorMessage.isNotEmpty) ...[
+              _buildErrorCard(errorMessage),
+              const SizedBox(height: 20),
+            ],
+
+            // Data Display
+            if (!isLoading && errorMessage.isEmpty && laporanData != null) ...[
+              _buildReportData(),
+            ],
+
+            // Empty State
+            if (!isLoading && errorMessage.isEmpty && laporanData == null) ...[
+              _buildEmptyState(),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildMonthYearSelector() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Pilih Periode',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Color(0xFF1D1D1F),
+              ),
+            ),
+            const SizedBox(height: 16),
+            Row(
+              children: [
+                Expanded(
+                  child: _buildDropdownField(
+                    label: 'Bulan',
+                    value: selectedMonth,
+                    items: List.generate(12, (index) => index + 1),
+                    itemBuilder: (value) => monthNames[value - 1],
+                    onChanged: (value) {
+                      setState(() {
+                        selectedMonth = value;
+                      });
+                    },
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: _buildDropdownField(
+                    label: 'Tahun',
+                    value: selectedYear,
+                    items: List.generate(
+                      5,
+                      (index) => DateTime.now().year - 2 + index,
+                    ),
+                    itemBuilder: (value) => value.toString(),
+                    onChanged: (value) {
+                      setState(() {
+                        selectedYear = value;
+                      });
+                    },
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: ElevatedButton.icon(
+                onPressed: _fetchLaporanData,
+                icon: const Icon(Icons.refresh, color: Colors.white),
+                label: const Text(
+                  'Tampilkan Laporan',
+                  style: TextStyle(color: Colors.white),
+                ),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFF1D1D1F),
+                  padding: const EdgeInsets.symmetric(vertical: 12),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildDropdownField<T>({
+    required String label,
+    required T value,
+    required List<T> items,
+    required String Function(T) itemBuilder,
+    required Function(T) onChanged,
+  }) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 14,
+            fontWeight: FontWeight.w500,
+            color: Color(0xFF1D1D1F),
+          ),
+        ),
+        const SizedBox(height: 8),
+        Container(
+          decoration: BoxDecoration(
+            border: Border.all(color: Colors.grey.shade300),
+            borderRadius: BorderRadius.circular(8),
+          ),
+          child: DropdownButtonFormField<T>(
+            value: value,
+            decoration: const InputDecoration(
+              contentPadding: EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              border: InputBorder.none,
+            ),
+            items: items.map((item) {
+              return DropdownMenuItem<T>(
+                value: item,
+                child: Text(itemBuilder(item)),
+              );
+            }).toList(),
+            onChanged: (value) => onChanged(value as T),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildErrorCard(String message) {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const Icon(Icons.error_outline, color: Colors.red, size: 24),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(message, style: const TextStyle(color: Colors.red)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildEmptyState() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(32),
+        child: Column(
+          children: [
+            Icon(Icons.inbox_outlined, size: 64, color: Colors.grey.shade400),
+            const SizedBox(height: 16),
+            Text(
+              'Belum ada data',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.w600,
+                color: Colors.grey.shade600,
+              ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              'Pilih periode dan klik "Tampilkan Laporan" untuk melihat data',
+              textAlign: TextAlign.center,
+              style: TextStyle(color: Colors.grey.shade600),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildReportData() {
+    if (laporanData == null) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        // Header Card
+        _buildHeaderCard(),
+        const SizedBox(height: 16),
+
+        // Sales Data Card
+        _buildSalesCard(),
+        const SizedBox(height: 16),
+
+        // Expense Data Card
+        _buildExpenseCard(),
+        const SizedBox(height: 16),
+
+        // Summary Card
+        _buildSummaryCard(),
+      ],
+    );
+  }
+
+  Widget _buildHeaderCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1D1D1F).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.analytics,
+                    color: Color(0xFF1D1D1F),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Laporan ${monthNames[selectedMonth - 1]} $selectedYear',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color(0xFF1D1D1F),
+                        ),
+                      ),
+                      Text(
+                        laporanData!.periode,
+                        style: TextStyle(color: Colors.grey.shade600),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSalesCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.green.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.trending_up,
+                    color: Colors.green,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Penjualan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1D1D1F),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildInfoItem(
+                  'Total Penjualan',
+                  formatCurrency(laporanData!.penjualan.totalPenjualan),
+                ),
+                _buildInfoItem(
+                  'Total Transaksi',
+                  laporanData!.penjualan.totalTransaksi.toString(),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildExpenseCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: Colors.red.withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.trending_down,
+                    color: Colors.red,
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Pengeluaran',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1D1D1F),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildInfoItem(
+                  'Total Pengeluaran',
+                  formatCurrency(laporanData!.pengeluaran.totalPengeluaran),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildSummaryCard() {
+    return Card(
+      elevation: 2,
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(8),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF1D1D1F).withOpacity(0.1),
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: const Icon(
+                    Icons.account_balance_wallet,
+                    color: Color(0xFF1D1D1F),
+                    size: 20,
+                  ),
+                ),
+                const SizedBox(width: 12),
+                const Text(
+                  'Ringkasan',
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color(0xFF1D1D1F),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            _buildSummaryItem(
+              'Laba Kotor',
+              formatCurrency(laporanData!.ringkasan.labaKotor),
+            ),
+            const Divider(),
+            _buildSummaryItem(
+              'Total Pengeluaran',
+              formatCurrency(laporanData!.ringkasan.totalPengeluaran),
+            ),
+            const Divider(),
+            _buildSummaryItem(
+              'Laba Bersih',
+              formatCurrency(laporanData!.ringkasan.labaBersih),
+              isHighlight: true,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildInfoItem(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: TextStyle(fontSize: 14, color: Colors.grey.shade600),
+        ),
+        const SizedBox(height: 4),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 16,
+            fontWeight: FontWeight.w600,
+            color: Color(0xFF1D1D1F),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildSummaryItem(
+    String label,
+    String value, {
+    bool isHighlight = false,
+  }) {
+    return Padding(
+      padding: const EdgeInsets.symmetric(vertical: 4),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w500,
+              color: isHighlight
+                  ? const Color(0xFF1D1D1F)
+                  : Colors.grey.shade700,
+            ),
+          ),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 16,
+              fontWeight: isHighlight ? FontWeight.bold : FontWeight.w600,
+              color: isHighlight ? Colors.green : const Color(0xFF1D1D1F),
+            ),
+          ),
+        ],
       ),
     );
   }
