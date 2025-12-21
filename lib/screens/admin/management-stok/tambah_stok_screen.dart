@@ -15,6 +15,8 @@ import '../../admin/ai/prediksi_habis_screen.dart';
 import '../../admin/master-data/add_category_screen.dart';
 import '../../admin/master-data/produk_gudang_screen.dart';
 import '../../admin/master-data/add_user_kasir_screen.dart';
+import '../../../models/warehouse_product.dart';
+import '../../../services/api_service.dart';
 
 class TambahStokScreen extends StatefulWidget {
   const TambahStokScreen({super.key});
@@ -28,10 +30,27 @@ class _TambahStokScreenState extends State<TambahStokScreen> {
   String userName = '';
   String userRole = '';
 
+  final ApiService _apiService = ApiService();
+  final TextEditingController _quantityController = TextEditingController();
+
+  List<WarehouseProduct> _products = [];
+  WarehouseProduct? _selectedProduct;
+  bool _isLoading = false;
+  bool _isAddingStock = false;
+  String _errorMessage = '';
+  String _successMessage = '';
+
   @override
   void initState() {
     super.initState();
     _loadUserData();
+    _loadProducts();
+  }
+
+  @override
+  void dispose() {
+    _quantityController.dispose();
+    super.dispose();
   }
 
   Future<void> _loadUserData() async {
@@ -40,6 +59,74 @@ class _TambahStokScreenState extends State<TambahStokScreen> {
       userName = prefs.getString('user_name') ?? 'User';
       userRole = prefs.getString('user_role') ?? 'Role';
     });
+  }
+
+  Future<void> _loadProducts() async {
+    setState(() {
+      _isLoading = true;
+      _errorMessage = '';
+      _successMessage = '';
+    });
+
+    try {
+      final products = await _apiService.fetchWarehouseProducts();
+      setState(() {
+        _products = products;
+        _isLoading = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isLoading = false;
+        _errorMessage = 'Gagal memuat data produk: $e';
+      });
+    }
+  }
+
+  Future<void> _addStock() async {
+    if (_selectedProduct == null) {
+      setState(() {
+        _errorMessage = 'Pilih produk terlebih dahulu';
+      });
+      return;
+    }
+
+    final quantityText = _quantityController.text.trim();
+    if (quantityText.isEmpty) {
+      setState(() {
+        _errorMessage = 'Masukkan jumlah stok';
+      });
+      return;
+    }
+
+    final quantity = int.tryParse(quantityText);
+    if (quantity == null || quantity <= 0) {
+      setState(() {
+        _errorMessage = 'Jumlah stok harus berupa angka positif';
+      });
+      return;
+    }
+
+    setState(() {
+      _isAddingStock = true;
+      _errorMessage = '';
+      _successMessage = '';
+    });
+
+    try {
+      await _apiService.addStockToWarehouse(_selectedProduct!.id, quantity);
+
+      setState(() {
+        _successMessage = 'Stok berhasil ditambahkan!';
+        _quantityController.clear();
+        _selectedProduct = null;
+        _isAddingStock = false;
+      });
+    } catch (e) {
+      setState(() {
+        _isAddingStock = false;
+        _errorMessage = 'Gagal menambahkan stok: $e';
+      });
+    }
   }
 
   @override
@@ -180,9 +267,135 @@ class _TambahStokScreenState extends State<TambahStokScreen> {
             ],
           ),
         ),
+        actions: [
+          IconButton(
+            icon: const Icon(Icons.refresh, color: Colors.white),
+            onPressed: _isLoading ? null : _loadProducts,
+          ),
+        ],
       ),
-      body: const Center(
-        child: Text("Tambah Stok Screen", style: TextStyle(fontSize: 24)),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              "Tambah Stok Gudang",
+              style: TextStyle(fontSize: 24, fontWeight: FontWeight.bold),
+            ),
+            const SizedBox(height: 8),
+            const Text(
+              "Tambahkan stok produk ke gudang",
+              style: TextStyle(color: Colors.grey, fontSize: 16),
+            ),
+            const SizedBox(height: 32),
+
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Column(
+                children: [
+                  // Product Selection Dropdown
+                  DropdownButtonFormField<WarehouseProduct>(
+                    value: _selectedProduct,
+                    decoration: const InputDecoration(
+                      labelText: "Pilih Produk",
+                      hintText: "Pilih produk dari daftar",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.inventory_2),
+                    ),
+                    items: _products.map((product) {
+                      return DropdownMenuItem<WarehouseProduct>(
+                        value: product,
+                        child: Text(
+                          product.name,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                      );
+                    }).toList(),
+                    onChanged: (product) {
+                      setState(() {
+                        _selectedProduct = product;
+                        _errorMessage = '';
+                        _successMessage = '';
+                      });
+                    },
+                  ),
+                  const SizedBox(height: 20),
+
+                  // Quantity Input
+                  TextField(
+                    controller: _quantityController,
+                    keyboardType: TextInputType.number,
+                    decoration: const InputDecoration(
+                      labelText: "Jumlah Stok",
+                      hintText: "Masukkan jumlah stok",
+                      border: OutlineInputBorder(),
+                      prefixIcon: Icon(Icons.add_shopping_cart),
+                    ),
+                  ),
+                  const SizedBox(height: 24),
+
+                  if (_errorMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.red.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.red.shade200),
+                      ),
+                      child: Text(
+                        _errorMessage,
+                        style: const TextStyle(color: Colors.red),
+                      ),
+                    ),
+
+                  if (_successMessage.isNotEmpty)
+                    Container(
+                      padding: const EdgeInsets.all(12),
+                      decoration: BoxDecoration(
+                        color: Colors.green.shade50,
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: Colors.green.shade200),
+                      ),
+                      child: Text(
+                        _successMessage,
+                        style: const TextStyle(color: Colors.green),
+                      ),
+                    ),
+
+                  const SizedBox(height: 24),
+
+                  SizedBox(
+                    width: double.infinity,
+                    height: 50,
+                    child: ElevatedButton(
+                      onPressed: _isAddingStock ? null : _addStock,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                      ),
+                      child: _isAddingStock
+                          ? const CircularProgressIndicator(color: Colors.white)
+                          : const Text(
+                              "Tambah Stok",
+                              style: TextStyle(
+                                fontSize: 16,
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

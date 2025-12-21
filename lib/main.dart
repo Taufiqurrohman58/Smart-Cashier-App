@@ -11,7 +11,11 @@ import 'screens/kasir/tambah_pengeluaran_screen.dart';
 // ✅ TAMBAHKAN INI
 final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  // App initialized successfully
+
   runApp(const MainApp());
 }
 

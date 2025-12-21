@@ -3,11 +3,11 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../models/laporan_pengeluaran.dart';
 import '../models/laporan_harian.dart';
 import '../models/laporan_bulanan.dart';
 import '../models/laporan_tahunan.dart';
+import '../models/warehouse_product.dart';
 
 class ApiService {
   static const String baseUrl = 'https://flutter001.pythonanywhere.com';
@@ -194,16 +194,30 @@ class ApiService {
     // For modern Android, use app-specific storage to avoid permission issues
     // No storage permission needed for app-specific directories
 
+    final fileName = 'laporan_${formatDate(date)}.xlsx';
+
+    // Starting download process
+    print('Starting download: $fileName');
+
     String url =
         '$baseUrl/api/kantin/rekap/export-excel/?date=${formatDate(date)}';
 
     try {
+      // Download started, 25% progress
+      print('Download progress: 25%');
+
       final response = await http.get(
         Uri.parse(url),
         headers: {'Authorization': 'Token $token'},
       );
 
+      // Download in progress, 50% complete
+      print('Download progress: 50%');
+
       if (response.statusCode == 200) {
+        // File processing, 75% complete
+        print('Download progress: 75%');
+
         // Get the downloads directory - use app-specific storage first
         Directory? directory;
 
@@ -241,12 +255,14 @@ class ApiService {
           await directory.create(recursive: true);
         }
 
-        final fileName = 'laporan_${formatDate(date)}.xlsx';
         final filePath = '${directory.path}/$fileName';
 
         // Write the file
         final file = File(filePath);
         await file.writeAsBytes(response.bodyBytes);
+
+        // Download completed successfully
+        print('Download completed: $fileName');
 
         return filePath;
       } else {
@@ -256,7 +272,120 @@ class ApiService {
         throw Exception('Gagal mengunduh file Excel (${response.statusCode})');
       }
     } catch (e) {
+      // Download failed
+      print('Download failed: $fileName');
       print('Error downloading Excel report: $e');
+      rethrow;
+    }
+  }
+
+  // Fetch warehouse products
+  Future<List<WarehouseProduct>> fetchWarehouseProducts() async {
+    final token = await _getAuthToken();
+
+    if (token == null) {
+      print('Error: Token tidak ditemukan');
+      throw Exception('Token tidak ditemukan');
+    }
+
+    String url = '$baseUrl/api/gudang/produk/';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+      );
+
+      if (response.statusCode == 200) {
+        final List<dynamic> data = json.decode(response.body);
+        return data.map((json) => WarehouseProduct.fromJson(json)).toList();
+      } else {
+        print(
+          'Error: Gagal memuat data produk gudang (${response.statusCode}) - ${response.body}',
+        );
+        throw Exception(
+          'Gagal memuat data produk gudang (${response.statusCode})',
+        );
+      }
+    } catch (e) {
+      print('Error fetching warehouse products: $e');
+      rethrow;
+    }
+  }
+
+  // Add stock to warehouse
+  Future<void> addStockToWarehouse(int productId, int quantity) async {
+    final token = await _getAuthToken();
+
+    if (token == null) {
+      print('Error: Token tidak ditemukan');
+      throw Exception('Token tidak ditemukan');
+    }
+
+    String url = '$baseUrl/api/gudang/stok/masuk/';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+        body: json.encode({'product_id': productId, 'quantity': quantity}),
+      );
+
+      if (response.statusCode == 200 || response.statusCode == 201) {
+        print('Stok berhasil ditambahkan');
+      } else {
+        print(
+          'Error: Gagal menambahkan stok (${response.statusCode}) - ${response.body}',
+        );
+        throw Exception('Gagal menambahkan stok (${response.statusCode})');
+      }
+    } catch (e) {
+      print('Error adding stock to warehouse: $e');
+      rethrow;
+    }
+  }
+
+  // Transfer stock from warehouse to kantin
+  Future<void> transferStockToKantin(int productGudangId, int quantity) async {
+    final token = await _getAuthToken();
+
+    if (token == null) {
+      print('Error: Token tidak ditemukan');
+      throw Exception('Token tidak ditemukan');
+    }
+
+    String url = '$baseUrl/api/kantin/stok/transfer/';
+
+    try {
+      final response = await http.post(
+        Uri.parse(url),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Token $token',
+        },
+        body: json.encode({
+          'product_gudang_id': productGudangId,
+          'quantity': quantity,
+        }),
+      );
+
+      if (response.statusCode == 200) {
+        final data = json.decode(response.body);
+        print(data['message'] ?? 'Stok berhasil ditransfer ke kantin');
+      } else {
+        print(
+          'Error: Gagal mentransfer stok (${response.statusCode}) - ${response.body}',
+        );
+        throw Exception('Gagal mentransfer stok (${response.statusCode})');
+      }
+    } catch (e) {
+      print('Error transferring stock to kantin: $e');
       rethrow;
     }
   }

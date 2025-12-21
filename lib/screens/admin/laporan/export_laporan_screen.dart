@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:permission_handler/permission_handler.dart';
 import '../../../widgets/admin_drawer.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import '../../admin_screen.dart';
@@ -117,35 +116,7 @@ class _ExportLaporanScreenState extends State<ExportLaporanScreen> {
     }
   }
 
-  void _showPermissionDialog() {
-    showDialog(
-      context: context,
-      builder: (BuildContext context) {
-        return AlertDialog(
-          title: const Text('Izin Penyimpanan Diperlukan'),
-          content: const Text(
-            'Aplikasi memerlukan izin akses penyimpanan untuk mengunduh file laporan. '
-            'Mohon berikan izin melalui pengaturan aplikasi.',
-          ),
-          actions: [
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-              },
-              child: const Text('Batal'),
-            ),
-            TextButton(
-              onPressed: () {
-                Navigator.of(context).pop();
-                openAppSettings(); // Open app settings
-              },
-              child: const Text('Buka Pengaturan'),
-            ),
-          ],
-        );
-      },
-    );
-  }
+
 
   @override
   Widget build(BuildContext context) {
