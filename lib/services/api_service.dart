@@ -1,6 +1,9 @@
 import 'dart:convert';
+import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 import '../models/laporan_pengeluaran.dart';
 import '../models/laporan_harian.dart';
 import '../models/laporan_bulanan.dart';
@@ -176,6 +179,84 @@ class ApiService {
       }
     } catch (e) {
       print('Error fetching laporan tahunan: $e');
+      rethrow;
+    }
+  }
+
+  Future<String> downloadExcelReport(DateTime date) async {
+    final token = await _getAuthToken();
+
+    if (token == null) {
+      print('Error: Token tidak ditemukan');
+      throw Exception('Token tidak ditemukan');
+    }
+
+    // For modern Android, use app-specific storage to avoid permission issues
+    // No storage permission needed for app-specific directories
+
+    String url =
+        '$baseUrl/api/kantin/rekap/export-excel/?date=${formatDate(date)}';
+
+    try {
+      final response = await http.get(
+        Uri.parse(url),
+        headers: {'Authorization': 'Token $token'},
+      );
+
+      if (response.statusCode == 200) {
+        // Get the downloads directory - use app-specific storage first
+        Directory? directory;
+
+        if (Platform.isAndroid) {
+          // For Android, try app-specific directory first (no permission needed)
+          try {
+            directory = await getApplicationDocumentsDirectory();
+          } catch (e) {
+            // Fallback to external storage if available
+            try {
+              directory = await getExternalStorageDirectory();
+              if (directory != null) {
+                final downloadsPath = '${directory.path}/Download';
+                directory = Directory(downloadsPath);
+              }
+            } catch (e2) {
+              // Final fallback to app documents directory
+              directory = await getApplicationDocumentsDirectory();
+            }
+          }
+        } else if (Platform.isIOS) {
+          // For iOS, use documents directory
+          directory = await getApplicationDocumentsDirectory();
+        } else {
+          // For other platforms, use application documents directory
+          directory = await getApplicationDocumentsDirectory();
+        }
+
+        if (directory == null) {
+          throw Exception('Tidak dapat mengakses direktori penyimpanan');
+        }
+
+        // Create directory if it doesn't exist
+        if (!await directory.exists()) {
+          await directory.create(recursive: true);
+        }
+
+        final fileName = 'laporan_${formatDate(date)}.xlsx';
+        final filePath = '${directory.path}/$fileName';
+
+        // Write the file
+        final file = File(filePath);
+        await file.writeAsBytes(response.bodyBytes);
+
+        return filePath;
+      } else {
+        print(
+          'Error: Gagal mengunduh file Excel (${response.statusCode}) - ${response.body}',
+        );
+        throw Exception('Gagal mengunduh file Excel (${response.statusCode})');
+      }
+    } catch (e) {
+      print('Error downloading Excel report: $e');
       rethrow;
     }
   }
